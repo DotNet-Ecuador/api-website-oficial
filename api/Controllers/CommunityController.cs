@@ -1,11 +1,12 @@
 ﻿using api.Models;
 using api.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     public class CommunityController : ControllerBase
     {
         private readonly CommunityService _communityService;
@@ -15,23 +16,21 @@ namespace api.Controllers
             _communityService = communityService;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<List<CommunityMember>>> GetAll()
-        {
-            var members = await _communityService.GetAllAsync();
-            return Ok(members);
-        }
-
         [HttpPost]
         public async Task<IActionResult> Create(CommunityMember member)
         {
-            if (string.IsNullOrWhiteSpace(member.FullName) || string.IsNullOrWhiteSpace(member.Email))
+            if (string.IsNullOrWhiteSpace(member.FullName) || member.FullName.Length < 3)
             {
-                return BadRequest("El nombre y el correo son obligatorios.");
+                return BadRequest("El nombre completo debe tener al menos 3 caracteres.");
+            }
+            
+            if (string.IsNullOrWhiteSpace(member.Email) || !new EmailAddressAttribute().IsValid(member.Email))
+            {
+                return BadRequest("El correo electrónico no tiene un formato válido.");
             }
 
             await _communityService.CreateAsync(member);
-            return CreatedAtAction(nameof(GetAll), new { id = member.Id }, member);
+            return CreatedAtAction(nameof(Create), new { id = member.Id }, member);
         }
     }
 }

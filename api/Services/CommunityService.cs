@@ -12,11 +12,6 @@ namespace api.Services
             _communityCollection = database.GetCollection<CommunityMember>("community_members");
         }
 
-        public async Task<List<CommunityMember>> GetAllAsync()
-        {
-            return await _communityCollection.Find(_ => true).ToListAsync();
-        }
-
         public async Task CreateAsync(CommunityMember member)
         {
             await _communityCollection.InsertOneAsync(member);

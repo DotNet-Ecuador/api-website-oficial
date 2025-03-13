@@ -1,6 +1,5 @@
 using api.Services;
 using DotNetEnv;
-using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,10 +23,18 @@ builder.Services.AddSingleton(sp =>
 
 // Add services to the container
 builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson(options =>
+{
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+});
+
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<CommunityService>();
+builder.Services.AddScoped<VolunteerApplicationService>();
+builder.Services.AddScoped<AreaOfInterestService>();
 
 var app = builder.Build();
 
