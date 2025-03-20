@@ -1,7 +1,7 @@
 ﻿using api.Models;
 using MongoDB.Driver;
 
-namespace api.Services
+namespace DotNetEcuador.API.Infraestructure.Services
 {
     public class VolunteerApplicationService
     {

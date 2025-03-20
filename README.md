@@ -2,6 +2,13 @@
 
 Este proyecto proporciona una API para gestionar la información de la comunidad, y aplicaciones de voluntariado. La API está diseñada para ser utilizada por la página oficial de la comunidad.
 
+## Levantamiento del contenedor
+
+En la ruta donde se encuentra el archivo Dockerfile ejecutar:
+
+docker build -t dotnetecuador-api -f api/Dockerfile .
+
+
 ## Endpoints
 
 ### 1. **Área de Interés**
@@ -146,3 +153,7 @@ Este endpoint permite que una persona aplique para ser voluntario en la comunida
    ```
 
 4. Accede a la documentación de la API en `https://localhost:7209/swagger`.
+
+
+## Formato de cadena de conexión MONGODB para la variable: MONGO_CONNECTION_STRING
+   mongodb://<usuario>:<contraseña>@<host>:<puerto>/<nombre-base-de-datos>
