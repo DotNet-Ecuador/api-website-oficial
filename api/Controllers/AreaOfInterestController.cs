@@ -8,9 +8,9 @@ namespace api.Controllers;
 [Route("api/v1/area-interest")]
 public class AreaOfInterestController : ControllerBase
 {
-    private readonly AreaOfInterestService _areaOfInterestService;
+    private readonly IAreaOfInterestService _areaOfInterestService;
 
-    public AreaOfInterestController(AreaOfInterestService areaOfInterestService)
+    public AreaOfInterestController(IAreaOfInterestService areaOfInterestService)
     {
         _areaOfInterestService = areaOfInterestService;
     }

@@ -9,13 +9,12 @@ namespace DotNetEcuador.Tests.Controllers;
 
 public class AreaOfInterestControllerTests
 {
-    private readonly Mock<AreaOfInterestService> _mockService;
+    private readonly Mock<IAreaOfInterestService> _mockService;
     private readonly AreaOfInterestController _controller;
 
     public AreaOfInterestControllerTests()
     {
-        var mockRepository = new Mock<DotNetEcuador.API.Infraestructure.Repositories.IRepository<AreaOfInterest>>();
-        _mockService = new Mock<AreaOfInterestService>(mockRepository.Object);
+        _mockService = new Mock<IAreaOfInterestService>();
         _controller = new AreaOfInterestController(_mockService.Object);
     }
 

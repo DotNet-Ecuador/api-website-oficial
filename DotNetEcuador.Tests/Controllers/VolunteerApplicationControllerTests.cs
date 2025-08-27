@@ -10,13 +10,12 @@ namespace DotNetEcuador.Tests.Controllers;
 
 public class VolunteerApplicationControllerTests
 {
-    private readonly Mock<VolunteerApplicationService> _mockService;
+    private readonly Mock<IVolunteerApplicationService> _mockService;
     private readonly VolunteerApplicationController _controller;
 
     public VolunteerApplicationControllerTests()
     {
-        var mockDatabase = new Mock<IMongoDatabase>();
-        _mockService = new Mock<VolunteerApplicationService>(mockDatabase.Object);
+        _mockService = new Mock<IVolunteerApplicationService>();
         _controller = new VolunteerApplicationController(_mockService.Object);
     }
 

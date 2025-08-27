@@ -9,7 +9,7 @@ namespace DotNetEcuador.Tests.Services;
 public class AreaOfInterestServiceTests
 {
     private readonly Mock<IRepository<AreaOfInterest>> _mockRepository;
-    private readonly AreaOfInterestService _service;
+    private readonly IAreaOfInterestService _service;
 
     public AreaOfInterestServiceTests()
     {

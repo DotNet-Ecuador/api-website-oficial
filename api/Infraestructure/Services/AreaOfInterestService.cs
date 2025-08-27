@@ -3,7 +3,7 @@ using DotNetEcuador.API.Infraestructure.Repositories;
 
 namespace DotNetEcuador.API.Infraestructure.Services;
 
-public class AreaOfInterestService
+public class AreaOfInterestService : IAreaOfInterestService
 {
     private static readonly List<AreaOfInterest> Areas = new List<AreaOfInterest>
     {
@@ -20,12 +20,12 @@ public class AreaOfInterestService
     {
         _areaOfInterestRepository = areaOfInterestRepository;
     }
-    public virtual async Task<List<AreaOfInterest>> GetAllAreasOfInterestAsync()
+    public async Task<List<AreaOfInterest>> GetAllAreasOfInterestAsync()
     {
         return await _areaOfInterestRepository.GetAllAsync();
 	}
 
-	public virtual async Task CreateAreaOfInterestAsync(
+	public async Task CreateAreaOfInterestAsync(
         AreaOfInterest areaOfInterest)
 	{
 		await _areaOfInterestRepository.CreateAsync(areaOfInterest);

@@ -9,11 +9,11 @@ namespace api.Controllers;
 [Route("api/v1/volulnteer-application")]
 public class VolunteerApplicationController : ControllerBase
 {
-    private readonly VolunteerApplicationService _volunteerApplicationService;
+    private readonly IVolunteerApplicationService _volunteerApplicationService;
 
-    public VolunteerApplicationController(VolunteerApplicationService volunteerApplicationServic)
+    public VolunteerApplicationController(IVolunteerApplicationService volunteerApplicationService)
     {
-        _volunteerApplicationService = volunteerApplicationServic;
+        _volunteerApplicationService = volunteerApplicationService;
     }
 
     [HttpPost("apply")]

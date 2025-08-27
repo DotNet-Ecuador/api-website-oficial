@@ -37,9 +37,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped(typeof(IReadRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<CommunityService>();
-builder.Services.AddScoped<VolunteerApplicationService>();
+builder.Services.AddScoped<IVolunteerApplicationService, VolunteerApplicationService>();
 builder.Services.AddMongoRepository<AreaOfInterest>(Constants.MongoCollections.AREA_INTEREST);
-builder.Services.AddScoped<AreaOfInterestService>();
+builder.Services.AddScoped<IAreaOfInterestService, AreaOfInterestService>();
 
 var app = builder.Build();
 

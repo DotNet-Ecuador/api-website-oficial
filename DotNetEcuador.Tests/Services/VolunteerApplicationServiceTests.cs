@@ -10,7 +10,7 @@ public class VolunteerApplicationServiceTests
 {
     private readonly Mock<IMongoDatabase> _mockDatabase;
     private readonly Mock<IMongoCollection<VolunteerApplication>> _mockCollection;
-    private readonly VolunteerApplicationService _service;
+    private readonly IVolunteerApplicationService _service;
 
     public VolunteerApplicationServiceTests()
     {
