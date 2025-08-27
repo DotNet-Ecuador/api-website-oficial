@@ -3,7 +3,7 @@ using MongoDB.Driver;
 
 namespace DotNetEcuador.API.Infraestructure.Services
 {
-    public class VolunteerApplicationService
+    public class VolunteerApplicationService : IVolunteerApplicationService
     {
         private readonly IMongoCollection<VolunteerApplication> _volunteerApplicationCollection;
 

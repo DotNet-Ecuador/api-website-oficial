@@ -3,7 +3,7 @@ using DotNetEcuador.API.Infraestructure.Repositories;
 
 namespace DotNetEcuador.API.Infraestructure.Services;
 
-public class AreaOfInterestService
+public class AreaOfInterestService : IAreaOfInterestService
 {
     private static readonly List<AreaOfInterest> Areas = new List<AreaOfInterest>
     {
