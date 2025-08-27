@@ -20,12 +20,12 @@ public class AreaOfInterestService
     {
         _areaOfInterestRepository = areaOfInterestRepository;
     }
-    public async Task<List<AreaOfInterest>> GetAllAreasOfInterestAsync()
+    public virtual async Task<List<AreaOfInterest>> GetAllAreasOfInterestAsync()
     {
         return await _areaOfInterestRepository.GetAllAsync();
 	}
 
-	public async Task CreateAreaOfInterestAsync(
+	public virtual async Task CreateAreaOfInterestAsync(
         AreaOfInterest areaOfInterest)
 	{
 		await _areaOfInterestRepository.CreateAsync(areaOfInterest);

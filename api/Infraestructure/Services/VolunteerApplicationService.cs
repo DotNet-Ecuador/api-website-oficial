@@ -12,7 +12,7 @@ namespace DotNetEcuador.API.Infraestructure.Services
             _volunteerApplicationCollection = database.GetCollection<VolunteerApplication>("volunteer_applications");
         }
 
-        public async Task CreateAsync(VolunteerApplication volunteerApplication)
+        public virtual async Task CreateAsync(VolunteerApplication volunteerApplication)
         {
             await _volunteerApplicationCollection.InsertOneAsync(volunteerApplication);
         }
@@ -26,7 +26,7 @@ namespace DotNetEcuador.API.Infraestructure.Services
             { "Other", "Otras áreas de interés" }
         };
 
-        public bool AreValidAreasOfInterest(Dictionary<string, bool> selectedAreas)
+        public virtual bool AreValidAreasOfInterest(Dictionary<string, bool> selectedAreas)
         {
             foreach (var area in selectedAreas)
             {
