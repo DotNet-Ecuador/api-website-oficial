@@ -1,5 +1,5 @@
-using api.Controllers;
-using api.Models;
+using Api.Controllers;
+using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Infraestructure.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
@@ -20,17 +20,17 @@ public class VolunteerApplicationControllerTests
     }
 
     [Fact]
-    public async Task Apply_ShouldReturnBadRequest_WhenFullNameIsEmpty()
+    public async Task ApplyShouldReturnBadRequestWhenFullNameIsEmpty()
     {
         // Arrange
         var application = new VolunteerApplication
         {
-            FullName = "",
+            FullName = string.Empty,
             Email = "test@example.com"
         };
 
         // Act
-        var result = await _controller.Apply(application);
+        var result = await _controller.Apply(application).ConfigureAwait(false);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();
@@ -39,7 +39,7 @@ public class VolunteerApplicationControllerTests
     }
 
     [Fact]
-    public async Task Apply_ShouldReturnBadRequest_WhenFullNameIsTooShort()
+    public async Task ApplyShouldReturnBadRequestWhenFullNameIsTooShort()
     {
         // Arrange
         var application = new VolunteerApplication
@@ -49,7 +49,7 @@ public class VolunteerApplicationControllerTests
         };
 
         // Act
-        var result = await _controller.Apply(application);
+        var result = await _controller.Apply(application).ConfigureAwait(false);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();
@@ -58,7 +58,7 @@ public class VolunteerApplicationControllerTests
     }
 
     [Fact]
-    public async Task Apply_ShouldReturnBadRequest_WhenEmailIsInvalid()
+    public async Task ApplyShouldReturnBadRequestWhenEmailIsInvalid()
     {
         // Arrange
         var application = new VolunteerApplication
@@ -68,7 +68,7 @@ public class VolunteerApplicationControllerTests
         };
 
         // Act
-        var result = await _controller.Apply(application);
+        var result = await _controller.Apply(application).ConfigureAwait(false);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();
@@ -77,7 +77,7 @@ public class VolunteerApplicationControllerTests
     }
 
     [Fact]
-    public async Task Apply_ShouldReturnBadRequest_WhenAreasOfInterestAreInvalid()
+    public async Task ApplyShouldReturnBadRequestWhenAreasOfInterestAreInvalid()
     {
         // Arrange
         var application = new VolunteerApplication
@@ -95,7 +95,7 @@ public class VolunteerApplicationControllerTests
             .Returns(false);
 
         // Act
-        var result = await _controller.Apply(application);
+        var result = await _controller.Apply(application).ConfigureAwait(false);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();
@@ -104,7 +104,7 @@ public class VolunteerApplicationControllerTests
     }
 
     [Fact]
-    public async Task Apply_ShouldReturnBadRequest_WhenOtherAreasValidationFails()
+    public async Task ApplyShouldReturnBadRequestWhenOtherAreasValidationFails()
     {
         // Arrange
         var application = new VolunteerApplication
@@ -115,7 +115,7 @@ public class VolunteerApplicationControllerTests
             {
                 { "Other", true }
             },
-            OtherAreas = "" // Empty when "Other" is selected
+            OtherAreas = string.Empty // Empty when "Other" is selected
         };
 
         _mockService
@@ -123,7 +123,7 @@ public class VolunteerApplicationControllerTests
             .Returns(true);
 
         // Act
-        var result = await _controller.Apply(application);
+        var result = await _controller.Apply(application).ConfigureAwait(false);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();
@@ -132,7 +132,7 @@ public class VolunteerApplicationControllerTests
     }
 
     [Fact]
-    public async Task Apply_ShouldReturnOk_WhenApplicationIsValid()
+    public async Task ApplyShouldReturnOkWhenApplicationIsValid()
     {
         // Arrange
         var application = new VolunteerApplication
@@ -161,13 +161,13 @@ public class VolunteerApplicationControllerTests
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _controller.Apply(application);
+        var result = await _controller.Apply(application).ConfigureAwait(false);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>();
         var okResult = result as OkObjectResult;
         okResult!.Value.Should().Be("Solicitud de voluntariado enviada exitosamente.");
-        
+
         _mockService.Verify(s => s.CreateAsync(application), Times.Once);
     }
 }

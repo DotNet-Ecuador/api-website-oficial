@@ -1,5 +1,5 @@
-using api.Controllers;
-using api.Models;
+using Api.Controllers;
+using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Infraestructure.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +19,7 @@ public class AreaOfInterestControllerTests
     }
 
     [Fact]
-    public async Task GetAllAreasOfInterest_ShouldReturnOkWithAreas_WhenAreasExist()
+    public async Task GetAllAreasOfInterestShouldReturnOkWithAreasWhenAreasExist()
     {
         // Arrange
         var expectedAreas = new List<AreaOfInterest>
@@ -33,18 +33,18 @@ public class AreaOfInterestControllerTests
             .ReturnsAsync(expectedAreas);
 
         // Act
-        var result = await _controller.GetAllAreasOfInterest();
+        var result = await _controller.GetAllAreasOfInterest().ConfigureAwait(false);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>();
         var okResult = result as OkObjectResult;
         okResult!.Value.Should().BeEquivalentTo(expectedAreas);
-        
+
         _mockService.Verify(s => s.GetAllAreasOfInterestAsync(), Times.Once);
     }
 
     [Fact]
-    public async Task GetAllAreasOfInterest_ShouldReturnOkWithEmptyList_WhenNoAreasExist()
+    public async Task GetAllAreasOfInterestShouldReturnOkWithEmptyListWhenNoAreasExist()
     {
         // Arrange
         var emptyList = new List<AreaOfInterest>();
@@ -54,18 +54,18 @@ public class AreaOfInterestControllerTests
             .ReturnsAsync(emptyList);
 
         // Act
-        var result = await _controller.GetAllAreasOfInterest();
+        var result = await _controller.GetAllAreasOfInterest().ConfigureAwait(false);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>();
         var okResult = result as OkObjectResult;
         okResult!.Value.Should().BeEquivalentTo(emptyList);
-        
+
         _mockService.Verify(s => s.GetAllAreasOfInterestAsync(), Times.Once);
     }
 
     [Fact]
-    public async Task CreateAreaOfInterest_ShouldReturnOk_WhenAreaIsValid()
+    public async Task CreateAreaOfInterestShouldReturnOkWhenAreaIsValid()
     {
         // Arrange
         var newArea = new AreaOfInterest
@@ -79,16 +79,16 @@ public class AreaOfInterestControllerTests
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _controller.CreateAreaOfInterest(newArea);
+        var result = await _controller.CreateAreaOfInterest(newArea).ConfigureAwait(false);
 
         // Assert
         result.Should().BeOfType<OkResult>();
-        
+
         _mockService.Verify(s => s.CreateAreaOfInterestAsync(newArea), Times.Once);
     }
 
     [Fact]
-    public async Task CreateAreaOfInterest_ShouldCallService_WithCorrectParameters()
+    public async Task CreateAreaOfInterestShouldCallServiceWithCorrectParameters()
     {
         // Arrange
         var newArea = new AreaOfInterest
@@ -103,14 +103,14 @@ public class AreaOfInterestControllerTests
             .Returns(Task.CompletedTask);
 
         // Act
-        await _controller.CreateAreaOfInterest(newArea);
+        await _controller.CreateAreaOfInterest(newArea).ConfigureAwait(false);
 
         // Assert
         _mockService.Verify(
             s => s.CreateAreaOfInterestAsync(
-                It.Is<AreaOfInterest>(a => 
-                    a.Id == newArea.Id && 
-                    a.Name == newArea.Name && 
+                It.Is<AreaOfInterest>(a =>
+                    a.Id == newArea.Id &&
+                    a.Name == newArea.Name &&
                     a.Description == newArea.Description)),
             Times.Once);
     }

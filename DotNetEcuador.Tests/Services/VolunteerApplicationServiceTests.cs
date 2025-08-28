@@ -1,4 +1,4 @@
-using api.Models;
+using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Infraestructure.Services;
 using FluentAssertions;
 using MongoDB.Driver;
@@ -16,16 +16,16 @@ public class VolunteerApplicationServiceTests
     {
         _mockDatabase = new Mock<IMongoDatabase>();
         _mockCollection = new Mock<IMongoCollection<VolunteerApplication>>();
-        
+
         _mockDatabase
             .Setup(db => db.GetCollection<VolunteerApplication>("volunteer_applications", null))
             .Returns(_mockCollection.Object);
-        
+
         _service = new VolunteerApplicationService(_mockDatabase.Object);
     }
 
     [Fact]
-    public async Task CreateAsync_ShouldCallRepositoryCreate_WhenApplicationIsValid()
+    public async Task CreateAsyncShouldCallRepositoryCreateWhenApplicationIsValid()
     {
         // Arrange
         var application = new VolunteerApplication
@@ -47,7 +47,7 @@ public class VolunteerApplicationServiceTests
         };
 
         // Act
-        await _service.CreateAsync(application);
+        await _service.CreateAsync(application).ConfigureAwait(false);
 
         // Assert
         _mockCollection.Verify(
@@ -63,7 +63,7 @@ public class VolunteerApplicationServiceTests
     [InlineData("Other", true)]
     [InlineData("InvalidArea", false)]
     [InlineData("", false)]
-    public void AreValidAreasOfInterest_ShouldValidateAreaNames_Correctly(string areaName, bool expectedValid)
+    public void AreValidAreasOfInterestShouldValidateAreaNamesCorrectly(string areaName, bool expectedValid)
     {
         // Arrange
         var areasOfInterest = new Dictionary<string, bool>
@@ -79,7 +79,7 @@ public class VolunteerApplicationServiceTests
     }
 
     [Fact]
-    public void AreValidAreasOfInterest_ShouldReturnTrue_WhenAllAreasAreValid()
+    public void AreValidAreasOfInterestShouldReturnTrueWhenAllAreasAreValid()
     {
         // Arrange
         var areasOfInterest = new Dictionary<string, bool>
@@ -97,7 +97,7 @@ public class VolunteerApplicationServiceTests
     }
 
     [Fact]
-    public void AreValidAreasOfInterest_ShouldReturnFalse_WhenAnyAreaIsInvalid()
+    public void AreValidAreasOfInterestShouldReturnFalseWhenAnyAreaIsInvalid()
     {
         // Arrange
         var areasOfInterest = new Dictionary<string, bool>
@@ -115,7 +115,7 @@ public class VolunteerApplicationServiceTests
     }
 
     [Fact]
-    public void AreValidAreasOfInterest_ShouldReturnTrue_WhenDictionaryIsEmpty()
+    public void AreValidAreasOfInterestShouldReturnTrueWhenDictionaryIsEmpty()
     {
         // Arrange
         var areasOfInterest = new Dictionary<string, bool>();

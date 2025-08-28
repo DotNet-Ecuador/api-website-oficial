@@ -1,4 +1,4 @@
-using api.Models;
+using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Infraestructure.Repositories;
 using DotNetEcuador.API.Infraestructure.Services;
 using FluentAssertions;
@@ -18,7 +18,7 @@ public class AreaOfInterestServiceTests
     }
 
     [Fact]
-    public async Task GetAllAreasOfInterestAsync_ShouldReturnAllAreas_WhenCalled()
+    public async Task GetAllAreasOfInterestAsyncShouldReturnAllAreasWhenCalled()
     {
         // Arrange
         var expectedAreas = new List<AreaOfInterest>
@@ -32,7 +32,7 @@ public class AreaOfInterestServiceTests
             .ReturnsAsync(expectedAreas);
 
         // Act
-        var result = await _service.GetAllAreasOfInterestAsync();
+        var result = await _service.GetAllAreasOfInterestAsync().ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -42,7 +42,7 @@ public class AreaOfInterestServiceTests
     }
 
     [Fact]
-    public async Task GetAllAreasOfInterestAsync_ShouldReturnEmptyList_WhenNoAreasExist()
+    public async Task GetAllAreasOfInterestAsyncShouldReturnEmptyListWhenNoAreasExist()
     {
         // Arrange
         var expectedAreas = new List<AreaOfInterest>();
@@ -52,7 +52,7 @@ public class AreaOfInterestServiceTests
             .ReturnsAsync(expectedAreas);
 
         // Act
-        var result = await _service.GetAllAreasOfInterestAsync();
+        var result = await _service.GetAllAreasOfInterestAsync().ConfigureAwait(false);
 
         // Assert
         result.Should().NotBeNull();
@@ -61,7 +61,7 @@ public class AreaOfInterestServiceTests
     }
 
     [Fact]
-    public async Task CreateAreaOfInterestAsync_ShouldCallRepositoryCreate_WhenAreaIsValid()
+    public async Task CreateAreaOfInterestAsyncShouldCallRepositoryCreateWhenAreaIsValid()
     {
         // Arrange
         var newArea = new AreaOfInterest
@@ -71,7 +71,7 @@ public class AreaOfInterestServiceTests
         };
 
         // Act
-        await _service.CreateAreaOfInterestAsync(newArea);
+        await _service.CreateAreaOfInterestAsync(newArea).ConfigureAwait(false);
 
         // Assert
         _mockRepository.Verify(
@@ -85,7 +85,7 @@ public class AreaOfInterestServiceTests
     [InlineData("TechnicalSupport")]
     [InlineData("SocialMediaManagement")]
     [InlineData("Other")]
-    public void ValidateAreaName_ShouldReturnTrue_ForValidAreaNames(string areaName)
+    public void ValidateAreaNameShouldReturnTrueForValidAreaNames(string areaName)
     {
         // Act & Assert
         var validAreas = new[] { "EventOrganization", "ContentCreation", "TechnicalSupport", "SocialMediaManagement", "Other" };

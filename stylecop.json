@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
+  "settings": {
+    "documentationRules": {
+      "companyName": "DotNet Ecuador Community",
+      "copyrightText": "Copyright (c) {companyName}. All rights reserved.",
+      "variables": {
+        "companyName": "DotNet Ecuador Community"
+      },
+      "xmlHeader": false,
+      "fileNamingConvention": "stylecop"
+    },
+    "maintainabilityRules": {
+      "topLevelTypes": ["class", "interface", "struct", "delegate", "enum"]
+    },
+    "namingRules": {
+      "allowCommonHungarianPrefixes": false,
+      "allowedHungarianPrefixes": [],
+      "includeInferredTupleElementNames": false,
+      "tupleElementNameCasing": "camelCase"
+    },
+    "orderingRules": {
+      "systemUsingDirectivesFirst": true,
+      "usingDirectivesPlacement": "insideNamespace",
+      "blankLinesBetweenUsingGroups": "omit"
+    },
+    "readabilityRules": {
+      "allowBuiltInTypeAliases": true
+    },
+    "spacingRules": {
+      "closingParenthesisMustBeSpacedCorrectly": true,
+      "openingParenthesisMustBeSpacedCorrectly": true
+    },
+    "layoutRules": {
+      "newlineAtEndOfFile": "require",
+      "allowConsecutiveUsings": true
+    }
+  }
+}

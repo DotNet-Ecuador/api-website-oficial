@@ -6,7 +6,7 @@ Este proyecto proporciona una API para gestionar la información de la comunidad
 
 En la ruta donde se encuentra el archivo Dockerfile ejecutar:
 
-docker build -t dotnetecuador-api -f api/Dockerfile .
+docker build -t dotnetecuador-api -f DotNetEcuador.API/Dockerfile .
 
 
 ## Endpoints
@@ -139,20 +139,33 @@ Este endpoint permite que una persona aplique para ser voluntario en la comunida
    git clone <URL del repositorio>
    ```
 
-2. Navega al directorio del proyecto y restaura los paquetes NuGet:
+2. Configura la variable de entorno para MongoDB:
+
+   ```bash
+   # Linux/macOS
+   export MONGO_CONNECTION_STRING="mongodb://localhost:27017/dotnet_ecuador"
+   
+   # Windows (PowerShell)
+   $env:MONGO_CONNECTION_STRING="mongodb://localhost:27017/dotnet_ecuador"
+   
+   # Windows (Command Prompt)
+   set MONGO_CONNECTION_STRING=mongodb://localhost:27017/dotnet_ecuador
+   ```
+
+3. Navega al directorio del proyecto y restaura los paquetes NuGet:
 
    ```bash
    cd <directorio del proyecto>
    dotnet restore
    ```
 
-3. Ejecuta la aplicación:
+4. Ejecuta la aplicación:
 
    ```bash
-   dotnet run
+   dotnet run --project DotNetEcuador.API
    ```
 
-4. Accede a la documentación de la API en `https://localhost:7209/swagger`.
+5. Accede a la documentación de la API en `https://localhost:7209/swagger`.
 
 
 ## Formato de cadena de conexión MONGODB para la variable: MONGO_CONNECTION_STRING

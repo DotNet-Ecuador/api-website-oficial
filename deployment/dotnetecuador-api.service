@@ -1,0 +1,25 @@
+[Unit]
+Description=DotNet Ecuador API
+After=network.target
+
+[Service]
+Type=notify
+# Replace with your actual deployment path
+WorkingDirectory=/var/www/dotnetecuador-api
+ExecStart=/usr/bin/dotnet DotNetEcuador.API.dll
+Restart=always
+# Restart service after 10 seconds if it fails
+RestartSec=10
+# Set your MongoDB connection string here
+Environment=MONGO_CONNECTION_STRING=mongodb://localhost:27017/dotnet_ecuador
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://0.0.0.0:5000
+# Replace with your user
+User=www-data
+Group=www-data
+SyslogIdentifier=dotnetecuador-api
+KillSignal=SIGINT
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
