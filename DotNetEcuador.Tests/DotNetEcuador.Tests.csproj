@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\api\DotNetEcuador.API.csproj" />
+    <ProjectReference Include="..\DotNetEcuador.API\DotNetEcuador.API.csproj" />
   </ItemGroup>
 
 </Project>
