@@ -1,4 +1,4 @@
-using api.Models;
+using DotNetEcuador.API.Models;
 
 namespace DotNetEcuador.API.Infraestructure.Services;
 

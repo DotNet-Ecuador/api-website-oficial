@@ -1,8 +1,8 @@
-﻿using api.Models;
+using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Infraestructure.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace api.Controllers;
+namespace Api.Controllers;
 
 [ApiController]
 [Route("api/v1/area-interest")]
@@ -18,15 +18,15 @@ public class AreaOfInterestController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllAreasOfInterest()
     {
-        var areas = await _areaOfInterestService.GetAllAreasOfInterestAsync();
+        var areas = await _areaOfInterestService.GetAllAreasOfInterestAsync().ConfigureAwait(false);
         return Ok(areas);
     }
 
-	[HttpPost]
-	public async Task<IActionResult> CreateAreaOfInterest(
+    [HttpPost]
+    public async Task<IActionResult> CreateAreaOfInterest(
         AreaOfInterest areaOfInterest)
-	{
-		await _areaOfInterestService.CreateAreaOfInterestAsync(areaOfInterest);
-		return Ok();
-	}
+    {
+        await _areaOfInterestService.CreateAreaOfInterestAsync(areaOfInterest).ConfigureAwait(false);
+        return Ok();
+    }
 }

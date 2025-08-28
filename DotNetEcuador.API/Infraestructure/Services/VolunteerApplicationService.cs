@@ -1,4 +1,4 @@
-﻿using api.Models;
+﻿using DotNetEcuador.API.Models;
 using MongoDB.Driver;
 
 namespace DotNetEcuador.API.Infraestructure.Services
@@ -14,7 +14,7 @@ namespace DotNetEcuador.API.Infraestructure.Services
 
         public async Task CreateAsync(VolunteerApplication volunteerApplication)
         {
-            await _volunteerApplicationCollection.InsertOneAsync(volunteerApplication);
+            await _volunteerApplicationCollection.InsertOneAsync(volunteerApplication).ConfigureAwait(false);
         }
 
         private readonly Dictionary<string, string> _areasOfInterest = new Dictionary<string, string>
@@ -35,6 +35,7 @@ namespace DotNetEcuador.API.Infraestructure.Services
                     return false;
                 }
             }
+
             return true;
         }
     }

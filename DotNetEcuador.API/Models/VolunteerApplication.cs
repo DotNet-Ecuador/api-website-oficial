@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace api.Models
+namespace DotNetEcuador.API.Models
 {
     public class VolunteerApplication
     {
@@ -23,6 +23,7 @@ namespace api.Models
             {
                 return false;
             }
+
             return true;
         }
     }

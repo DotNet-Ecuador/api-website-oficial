@@ -1,4 +1,4 @@
-using api.Models;
+using DotNetEcuador.API.Models;
 using FluentAssertions;
 
 namespace DotNetEcuador.Tests.Models;
@@ -6,7 +6,7 @@ namespace DotNetEcuador.Tests.Models;
 public class VolunteerApplicationTests
 {
     [Fact]
-    public void ValidateOtherAreas_ShouldReturnTrue_WhenOtherIsNotSelected()
+    public void ValidateOtherAreasShouldReturnTrueWhenOtherIsNotSelected()
     {
         // Arrange
         var application = new VolunteerApplication
@@ -16,7 +16,7 @@ public class VolunteerApplicationTests
                 { "EventOrganization", true },
                 { "ContentCreation", false }
             },
-            OtherAreas = ""
+            OtherAreas = string.Empty
         };
 
         // Act
@@ -27,7 +27,7 @@ public class VolunteerApplicationTests
     }
 
     [Fact]
-    public void ValidateOtherAreas_ShouldReturnTrue_WhenOtherIsSelectedAndOtherAreasHasValue()
+    public void ValidateOtherAreasShouldReturnTrueWhenOtherIsSelectedAndOtherAreasHasValue()
     {
         // Arrange
         var application = new VolunteerApplication
@@ -47,7 +47,7 @@ public class VolunteerApplicationTests
     }
 
     [Fact]
-    public void ValidateOtherAreas_ShouldReturnFalse_WhenOtherIsSelectedButOtherAreasIsEmpty()
+    public void ValidateOtherAreasShouldReturnFalseWhenOtherIsSelectedButOtherAreasIsEmpty()
     {
         // Arrange
         var application = new VolunteerApplication
@@ -56,7 +56,7 @@ public class VolunteerApplicationTests
             {
                 { "Other", true }
             },
-            OtherAreas = ""
+            OtherAreas = string.Empty
         };
 
         // Act
@@ -67,7 +67,7 @@ public class VolunteerApplicationTests
     }
 
     [Fact]
-    public void ValidateOtherAreas_ShouldReturnFalse_WhenOtherIsSelectedButOtherAreasIsWhitespace()
+    public void ValidateOtherAreasShouldReturnFalseWhenOtherIsSelectedButOtherAreasIsWhitespace()
     {
         // Arrange
         var application = new VolunteerApplication
@@ -87,7 +87,7 @@ public class VolunteerApplicationTests
     }
 
     [Fact]
-    public void ValidateOtherAreas_ShouldReturnTrue_WhenOtherKeyDoesNotExist()
+    public void ValidateOtherAreasShouldReturnTrueWhenOtherKeyDoesNotExist()
     {
         // Arrange
         var application = new VolunteerApplication
@@ -97,7 +97,7 @@ public class VolunteerApplicationTests
                 { "EventOrganization", true },
                 { "ContentCreation", true }
             },
-            OtherAreas = ""
+            OtherAreas = string.Empty
         };
 
         // Act
@@ -111,7 +111,7 @@ public class VolunteerApplicationTests
     [InlineData("")]
     [InlineData("John Doe")]
     [InlineData("María García")]
-    public void FullName_ShouldAcceptVariousInputs(string fullName)
+    public void FullNameShouldAcceptVariousInputs(string fullName)
     {
         // Arrange & Act
         var application = new VolunteerApplication
@@ -127,7 +127,7 @@ public class VolunteerApplicationTests
     [InlineData("")]
     [InlineData("test@example.com")]
     [InlineData("user.name+tag@domain.com")]
-    public void Email_ShouldAcceptVariousInputs(string email)
+    public void EmailShouldAcceptVariousInputs(string email)
     {
         // Arrange & Act
         var application = new VolunteerApplication

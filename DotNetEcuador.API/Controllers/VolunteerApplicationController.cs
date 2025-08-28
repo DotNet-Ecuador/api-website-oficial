@@ -1,9 +1,9 @@
-﻿using api.Models;
+using System.ComponentModel.DataAnnotations;
+using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Infraestructure.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
-namespace api.Controllers;
+namespace Api.Controllers;
 
 [ApiController]
 [Route("api/v1/volulnteer-application")]
@@ -42,7 +42,7 @@ public class VolunteerApplicationController : ControllerBase
             return BadRequest("El campo 'Otras áreas de interés' debe contener un valor si se selecciona.");
         }
 
-        await _volunteerApplicationService.CreateAsync(application);
+        await _volunteerApplicationService.CreateAsync(application).ConfigureAwait(false);
         return Ok("Solicitud de voluntariado enviada exitosamente.");
     }
 }

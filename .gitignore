@@ -19,6 +19,41 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
+
+# Code quality and analysis outputs
+**/TestResults/
+**/coverage.*.xml
+**/CoverageReport/
+**/.sonarqube/
+**/stylecop.cache
+**/CodeAnalysisLog.xml
+**/CodeAnalysisReport.xml
+**/*.tmp
+**/*.temp
+
+# Security and sensitive files
+**/*.key
+**/*.pfx
+**/*.p12
+**/*.secret
+**/*password*
+**/*secret*
+**/appsettings.Production.json.backup
+
+# IDE and editor files
+**/.idea/
+**/*.swp
+**/*.swo
+*~
+**/.DS_Store
+**/Thumbs.db
+
+# Build and package outputs
+**/packages/
+**/publish/
+**/dist/
+**/build/
+
 !**/.gitignore
 !.git/HEAD
 !.git/config

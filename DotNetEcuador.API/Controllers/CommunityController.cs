@@ -1,9 +1,9 @@
-﻿using api.Models;
+using System.ComponentModel.DataAnnotations;
+using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Infraestructure.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
-namespace api.Controllers;
+namespace Api.Controllers;
 
 [ApiController]
 [Route("api/v1/community-member")]
@@ -23,13 +23,13 @@ public class CommunityController : ControllerBase
         {
             return BadRequest("El nombre completo debe tener al menos 3 caracteres.");
         }
-        
+
         if (string.IsNullOrWhiteSpace(member.Email) || !new EmailAddressAttribute().IsValid(member.Email))
         {
             return BadRequest("El correo electrónico no tiene un formato válido.");
         }
 
-        await _communityService.CreateAsync(member);
+        await _communityService.CreateAsync(member).ConfigureAwait(false);
         return CreatedAtAction(nameof(Create), new { id = member.Id }, member);
     }
 }

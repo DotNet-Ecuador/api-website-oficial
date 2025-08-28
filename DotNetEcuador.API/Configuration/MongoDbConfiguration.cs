@@ -1,8 +1,8 @@
+using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Common;
 using DotNetEcuador.API.Infraestructure.Extensions;
 using DotNetEcuador.API.Infraestructure.Repositories;
 using MongoDB.Driver;
-using api.Models;
 
 namespace DotNetEcuador.API.Configuration;
 
@@ -21,14 +21,14 @@ public static class MongoDbConfiguration
         services.AddSingleton(sp =>
         {
             var client = sp.GetRequiredService<IMongoClient>();
-            return client.GetDatabase(Constants.MONGO_DATABASE);
+            return client.GetDatabase(Constants.MONGODATABASE);
         });
 
         // Register repositories
         services.AddScoped(typeof(IReadRepository<>), typeof(Repository<>));
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-        
+
         // Register MongoDB repository for AreaOfInterest
-        services.AddMongoRepository<AreaOfInterest>(Constants.MongoCollections.AREA_INTEREST);
+        services.AddMongoRepository<AreaOfInterest>(Constants.MongoCollections.AREAINTEREST);
     }
 }

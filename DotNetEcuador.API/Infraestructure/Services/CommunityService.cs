@@ -1,4 +1,4 @@
-﻿using api.Models;
+using DotNetEcuador.API.Models;
 using MongoDB.Driver;
 
 namespace DotNetEcuador.API.Infraestructure.Services
@@ -14,7 +14,7 @@ namespace DotNetEcuador.API.Infraestructure.Services
 
         public async Task CreateAsync(CommunityMember member)
         {
-            await _communityCollection.InsertOneAsync(member);
+            await _communityCollection.InsertOneAsync(member).ConfigureAwait(false);
         }
     }
 }
