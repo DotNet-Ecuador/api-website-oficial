@@ -1,4 +1,5 @@
 using DotNetEcuador.API.Common;
+using DotNetEcuador.API.Exceptions;
 using DotNetEcuador.API.Infraestructure.Extensions;
 using DotNetEcuador.API.Infraestructure.Repositories;
 using DotNetEcuador.API.Models;
@@ -28,9 +29,22 @@ namespace DotNetEcuador.API.Infraestructure.Services
                 _logger.LogInformation("Application details: Name={FullName}, Email={Email}, Areas={AreasCount}", 
                     volunteerApplication.FullName, volunteerApplication.Email, volunteerApplication.AreasOfInterest?.Count ?? 0);
                 
+                // Validar si ya existe un voluntario con este email
+                var existingApplication = await GetByEmailAsync(volunteerApplication.Email);
+                if (existingApplication != null)
+                {
+                    _logger.LogWarning("Attempt to create duplicate volunteer application with email: {Email}", volunteerApplication.Email);
+                    throw new DuplicateEmailException(volunteerApplication.Email);
+                }
+                
                 await _repository.CreateAsync(volunteerApplication);
                 
                 _logger.LogInformation("VolunteerApplication saved successfully to database");
+            }
+            catch (DuplicateEmailException)
+            {
+                // Re-throw la excepción de email duplicado sin logging adicional
+                throw;
             }
             catch (Exception ex)
             {
@@ -39,32 +53,6 @@ namespace DotNetEcuador.API.Infraestructure.Services
             }
         }
 
-        private readonly HashSet<string> _validAreasOfInterest = new HashSet<string>
-        {
-            "EventOrganization",
-            "ContentCreation", 
-            "TechnicalSupport",
-            "SocialMediaManagement",
-            "Other"
-        };
-
-        public bool AreValidAreasOfInterest(List<string> selectedAreas)
-        {
-            if (selectedAreas == null || selectedAreas.Count == 0)
-            {
-                return false;
-            }
-
-            foreach (var area in selectedAreas)
-            {
-                if (string.IsNullOrWhiteSpace(area) || !_validAreasOfInterest.Contains(area))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
 
         public async Task<PagedResponse<VolunteerApplication>> GetAllAsync(PagedRequest request)
         {
@@ -82,6 +70,22 @@ namespace DotNetEcuador.API.Infraestructure.Services
                 app.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                 app.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                 app.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public async Task<VolunteerApplication?> GetByEmailAsync(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return null;
+            }
+
+            _logger.LogDebug("Searching for volunteer application with email: {Email}", email);
+            
+            var result = await _repository.FindAsync(app => app.Email.ToLower() == email.ToLower());
+            
+            _logger.LogDebug("Search result for email {Email}: {Found}", email, result != null ? "Found" : "Not found");
+            
+            return result;
         }
     }
 }

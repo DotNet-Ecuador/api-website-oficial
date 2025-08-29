@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using DotNetEcuador.API.Common;
 using DotNetEcuador.API.Controllers;
@@ -67,51 +66,24 @@ public class VolunteerApplicationController : BaseApiController
     [ProducesResponseType(typeof(object), 500)]
     public async Task<IActionResult> Apply(VolunteerApplication application)
     {
-        // Debug logging
-        Logger.LogInformation("Received volunteer application: FullName={FullName}, Email={Email}, AreasOfInterest={AreasCount}", 
+        // FluentValidation will handle validation automatically via ValidationActionFilter
+        // If we reach here, the model is valid
+
+        Logger.LogInformation("Received valid volunteer application: FullName={FullName}, Email={Email}, AreasOfInterest={AreasCount}", 
             application.FullName, application.Email, application.AreasOfInterest?.Count ?? 0);
-
-        var isValid = _volunteerApplicationService.AreValidAreasOfInterest(application.AreasOfInterest ?? new List<string>());
-        var isValidOtherAreas = application.ValidateOtherAreas();
-
-        Logger.LogInformation("Validation results: AreasValid={AreasValid}, OtherAreasValid={OtherAreasValid}", 
-            isValid, isValidOtherAreas);
-
-        if (string.IsNullOrWhiteSpace(application.FullName) || application.FullName.Length < 3)
-        {
-            Logger.LogWarning("Validation failed: FullName is invalid");
-            return BadRequest(GetMessage(MessageKeys.ValidationFullName));
-        }
-
-        if (string.IsNullOrWhiteSpace(application.Email) || !new EmailAddressAttribute().IsValid(application.Email))
-        {
-            Logger.LogWarning("Validation failed: Email is invalid");
-            return BadRequest(GetMessage(MessageKeys.ValidationEmail));
-        }
-
-        if (!isValid)
-        {
-            Logger.LogWarning("Validation failed: AreasOfInterest are invalid");
-            return BadRequest(GetMessage(MessageKeys.ValidationAreas));
-        }
-
-        if (!isValidOtherAreas)
-        {
-            Logger.LogWarning("Validation failed: OtherAreas validation failed");
-            return BadRequest(GetMessage(MessageKeys.ValidationOtherAreas));
-        }
 
         try
         {
             Logger.LogInformation("Attempting to save volunteer application to database");
             await _volunteerApplicationService.CreateAsync(application).ConfigureAwait(false);
             Logger.LogInformation("Volunteer application saved successfully");
-            return Ok(GetMessage(MessageKeys.SuccessVolunteerSent));
+            
+            return SuccessResponse(GetMessage(MessageKeys.SuccessVolunteerSent));
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error saving volunteer application");
-            return StatusCode(500, new { message = "Error guardando la solicitud: " + ex.Message });
+            throw; // Let GlobalExceptionMiddleware handle it
         }
     }
 
@@ -171,22 +143,18 @@ public class VolunteerApplicationController : BaseApiController
     [ProducesResponseType(typeof(object), 500)]
     public async Task<IActionResult> GetAllApplications([FromQuery] PagedRequest request)
     {
+        // FluentValidation will handle validation automatically via ValidationActionFilter
+        // Debug: Log user claims
+        var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? 
+                      User.FindFirst("role")?.Value ?? 
+                      "No role found";
+        var userId = User.FindFirst("userId")?.Value ?? "No userId found";
+        var allClaims = User.Claims.Select(c => $"{c.Type}={c.Value}");
+        Logger.LogInformation("User requesting volunteer applications - UserId: {UserId}, Role: {Role}, All Claims: {Claims}", 
+            userId, userRole, string.Join(", ", allClaims));
+
         try
         {
-            // Debug: Log user claims
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? 
-                          User.FindFirst("role")?.Value ?? 
-                          "No role found";
-            var userId = User.FindFirst("userId")?.Value ?? "No userId found";
-            var allClaims = User.Claims.Select(c => $"{c.Type}={c.Value}");
-            Logger.LogInformation("User requesting volunteer applications - UserId: {UserId}, Role: {Role}, All Claims: {Claims}", 
-                userId, userRole, string.Join(", ", allClaims));
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             PagedResponse<VolunteerApplication> result;
             
             if (!string.IsNullOrWhiteSpace(request.Search))
@@ -198,16 +166,12 @@ public class VolunteerApplicationController : BaseApiController
                 result = await _volunteerApplicationService.GetAllAsync(request);
             }
 
-            return Ok(result);
+            return SuccessResponse(result, "Lista de solicitudes obtenida exitosamente");
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error retrieving volunteer applications: {ErrorMessage}", ex.Message);
-            return StatusCode(500, new { 
-                message = GetMessage(MessageKeys.ErrorServer),
-                details = ex.Message,
-                stackTrace = ex.StackTrace?.Split('\n').Take(5).ToArray() // Solo primeras 5 líneas para debug
-            });
+            throw; // Let GlobalExceptionMiddleware handle it
         }
     }
 
@@ -219,12 +183,14 @@ public class VolunteerApplicationController : BaseApiController
     public IActionResult GetUserClaims()
     {
         var claims = User.Claims.Select(c => new { Type = c.Type, Value = c.Value }).ToList();
-        return Ok(new { 
+        var data = new { 
             IsAuthenticated = User.Identity?.IsAuthenticated,
             Claims = claims,
             Role = User.FindFirst(ClaimTypes.Role)?.Value,
             UserId = User.FindFirst("userId")?.Value
-        });
+        };
+        
+        return SuccessResponse(data, "Claims obtenidos exitosamente");
     }
 
     /// <summary>
@@ -285,12 +251,13 @@ public class VolunteerApplicationController : BaseApiController
                 await _volunteerApplicationService.CreateAsync(app);
             }
 
-            return Ok(new { message = $"Se crearon {testApplications.Count} solicitudes de prueba exitosamente." });
+            var message = $"Se crearon {testApplications.Count} solicitudes de prueba exitosamente.";
+            return SuccessResponse(message);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error creating test data");
-            return StatusCode(500, new { message = "Error creando datos de prueba: " + ex.Message });
+            throw; // Let GlobalExceptionMiddleware handle it
         }
     }
 
@@ -306,24 +273,28 @@ public class VolunteerApplicationController : BaseApiController
             // Intentar contar documentos en la colección
             var result = await _volunteerApplicationService.GetAllAsync(new PagedRequest { Page = 1, PageSize = 1 });
             
-            return Ok(new { 
+            var data = new { 
                 message = "MongoDB connection successful",
                 databaseName = "dotnet_ecuador",
                 collectionName = "volunteer_applications",
                 documentCount = result.TotalCount,
                 status = "Connected"
-            });
+            };
+            
+            return SuccessResponse(data, "Verificación de MongoDB completada");
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "MongoDB verification failed");
-            return Ok(new { 
+            var errorData = new { 
                 message = "MongoDB connection failed",
                 databaseName = "dotnet_ecuador",
                 collectionName = "volunteer_applications",
                 error = ex.Message,
                 status = "Failed"
-            });
+            };
+            
+            return SuccessResponse(errorData, "Verificación de MongoDB con errores");
         }
     }
 }

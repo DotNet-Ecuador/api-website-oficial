@@ -5,91 +5,6 @@ namespace DotNetEcuador.Tests.Models;
 
 public class VolunteerApplicationTests
 {
-    [Fact]
-    public void ValidateOtherAreasShouldReturnTrueWhenOtherIsNotSelected()
-    {
-        // Arrange
-        var application = new VolunteerApplication
-        {
-            AreasOfInterest = new List<string> { "EventOrganization" },
-            OtherAreas = string.Empty
-        };
-
-        // Act
-        var result = application.ValidateOtherAreas();
-
-        // Assert
-        result.Should().BeTrue();
-    }
-
-    [Fact]
-    public void ValidateOtherAreasShouldReturnTrueWhenOtherIsSelectedAndOtherAreasHasValue()
-    {
-        // Arrange
-        var application = new VolunteerApplication
-        {
-            AreasOfInterest = new List<string> { "Other" },
-            OtherAreas = "Custom area of interest"
-        };
-
-        // Act
-        var result = application.ValidateOtherAreas();
-
-        // Assert
-        result.Should().BeTrue();
-    }
-
-    [Fact]
-    public void ValidateOtherAreasShouldReturnFalseWhenOtherIsSelectedButOtherAreasIsEmpty()
-    {
-        // Arrange
-        var application = new VolunteerApplication
-        {
-            AreasOfInterest = new List<string> { "Other" },
-            OtherAreas = string.Empty
-        };
-
-        // Act
-        var result = application.ValidateOtherAreas();
-
-        // Assert
-        result.Should().BeFalse();
-    }
-
-    [Fact]
-    public void ValidateOtherAreasShouldReturnFalseWhenOtherIsSelectedButOtherAreasIsWhitespace()
-    {
-        // Arrange
-        var application = new VolunteerApplication
-        {
-            AreasOfInterest = new List<string> { "Other" },
-            OtherAreas = "   "
-        };
-
-        // Act
-        var result = application.ValidateOtherAreas();
-
-        // Assert
-        result.Should().BeFalse();
-    }
-
-    [Fact]
-    public void ValidateOtherAreasShouldReturnTrueWhenOtherKeyDoesNotExist()
-    {
-        // Arrange
-        var application = new VolunteerApplication
-        {
-            AreasOfInterest = new List<string> { "EventOrganization", "ContentCreation" },
-            OtherAreas = string.Empty
-        };
-
-        // Act
-        var result = application.ValidateOtherAreas();
-
-        // Assert
-        result.Should().BeTrue();
-    }
-
     [Theory]
     [InlineData("")]
     [InlineData("John Doe")]
@@ -120,5 +35,32 @@ public class VolunteerApplicationTests
 
         // Assert
         application.Email.Should().Be(email);
+    }
+
+    [Fact]
+    public void AreasOfInterestShouldInitializeAsEmptyList()
+    {
+        // Arrange & Act
+        var application = new VolunteerApplication();
+
+        // Assert
+        application.AreasOfInterest.Should().NotBeNull();
+        application.AreasOfInterest.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ShouldAcceptMultipleAreasOfInterest()
+    {
+        // Arrange
+        var areas = new List<string> { "EventOrganization", "TechnicalSupport", "Other" };
+
+        // Act
+        var application = new VolunteerApplication
+        {
+            AreasOfInterest = areas
+        };
+
+        // Assert
+        application.AreasOfInterest.Should().BeEquivalentTo(areas);
     }
 }
