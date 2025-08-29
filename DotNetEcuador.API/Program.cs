@@ -1,5 +1,9 @@
 using DotNetEcuador.API.Configuration;
 using DotNetEcuador.API.Services;
+using DotNetEcuador.API.Middleware;
+using DotNetEcuador.API.Filters;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,10 +17,20 @@ builder.Services.ConfigureApiVersioning();
 builder.Services.ConfigureAuthentication();
 
 // Add services to the container
-builder.Services.AddControllers().AddNewtonsoftJson(options =>
+builder.Services.AddControllers(options =>
+{
+    // Add global validation filter
+    options.Filters.Add<ValidationActionFilter>();
+})
+.AddNewtonsoftJson(options =>
 {
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
 });
+
+// Configure FluentValidation
+builder.Services.AddFluentValidationAutoValidation()
+    .AddFluentValidationClientsideAdapters()
+    .AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -36,6 +50,8 @@ builder.Services.ConfigureHealthChecks();
 var app = builder.Build();
 
 // Configure middleware
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     var apiVersionDescriptionProvider = app.Services.GetRequiredService<Asp.Versioning.ApiExplorer.IApiVersionDescriptionProvider>();

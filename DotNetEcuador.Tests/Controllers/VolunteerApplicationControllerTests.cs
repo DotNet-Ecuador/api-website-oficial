@@ -1,11 +1,11 @@
 using DotNetEcuador.API.Controllers.V1;
 using DotNetEcuador.API.Models;
+using DotNetEcuador.API.Models.Common;
 using DotNetEcuador.API.Infraestructure.Services;
 using DotNetEcuador.API.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
 using Moq;
 
 namespace DotNetEcuador.Tests.Controllers;
@@ -26,145 +26,129 @@ public class VolunteerApplicationControllerTests
     }
 
     [Fact]
-    public async Task ApplyShouldReturnBadRequestWhenFullNameIsEmpty()
+    public async Task ApplyShouldReturnSuccessWhenValidApplication()
     {
         // Arrange
         var application = new VolunteerApplication
         {
-            FullName = string.Empty,
-            Email = "test@example.com"
-        };
-
-        // Act
-        var result = await _controller.Apply(application).ConfigureAwait(false);
-
-        // Assert
-        result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequestResult = result as BadRequestObjectResult;
-        badRequestResult!.Value.Should().Be("El nombre completo debe tener al menos 3 caracteres.");
-    }
-
-    [Fact]
-    public async Task ApplyShouldReturnBadRequestWhenFullNameIsTooShort()
-    {
-        // Arrange
-        var application = new VolunteerApplication
-        {
-            FullName = "Jo",
-            Email = "test@example.com"
-        };
-
-        // Act
-        var result = await _controller.Apply(application).ConfigureAwait(false);
-
-        // Assert
-        result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequestResult = result as BadRequestObjectResult;
-        badRequestResult!.Value.Should().Be("El nombre completo debe tener al menos 3 caracteres.");
-    }
-
-    [Fact]
-    public async Task ApplyShouldReturnBadRequestWhenEmailIsInvalid()
-    {
-        // Arrange
-        var application = new VolunteerApplication
-        {
-            FullName = "John Doe",
-            Email = "invalid-email"
-        };
-
-        // Act
-        var result = await _controller.Apply(application).ConfigureAwait(false);
-
-        // Assert
-        result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequestResult = result as BadRequestObjectResult;
-        badRequestResult!.Value.Should().Be("El correo electrónico no tiene un formato válido.");
-    }
-
-    [Fact]
-    public async Task ApplyShouldReturnBadRequestWhenAreasOfInterestAreInvalid()
-    {
-        // Arrange
-        var application = new VolunteerApplication
-        {
-            FullName = "John Doe",
-            Email = "john@example.com",
-            AreasOfInterest = new List<string> { "InvalidArea" }
-        };
-
-        _mockService
-            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<List<string>>()))
-            .Returns(false);
-
-        // Act
-        var result = await _controller.Apply(application).ConfigureAwait(false);
-
-        // Assert
-        result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequestResult = result as BadRequestObjectResult;
-        badRequestResult!.Value.Should().Be("Algunas de las áreas de interés seleccionadas no son válidas.");
-    }
-
-    [Fact]
-    public async Task ApplyShouldReturnBadRequestWhenOtherAreasValidationFails()
-    {
-        // Arrange
-        var application = new VolunteerApplication
-        {
-            FullName = "John Doe",
-            Email = "john@example.com",
-            AreasOfInterest = new List<string> { "Other" },
-            OtherAreas = string.Empty // Empty when "Other" is selected
-        };
-
-        _mockService
-            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<List<string>>()))
-            .Returns(true);
-
-        // Act
-        var result = await _controller.Apply(application).ConfigureAwait(false);
-
-        // Assert
-        result.Should().BeOfType<BadRequestObjectResult>();
-        var badRequestResult = result as BadRequestObjectResult;
-        badRequestResult!.Value.Should().Be("El campo 'Otras áreas de interés' debe contener un valor si se selecciona.");
-    }
-
-    [Fact]
-    public async Task ApplyShouldReturnOkWhenApplicationIsValid()
-    {
-        // Arrange
-        var application = new VolunteerApplication
-        {
-            FullName = "John Doe",
-            Email = "john@example.com",
-            PhoneNumber = "123456789",
+            FullName = "Juan Pérez",
+            Email = "test@example.com",
             City = "Quito",
-            HasVolunteeringExperience = true,
             AreasOfInterest = new List<string> { "EventOrganization" },
             AvailableTime = "Weekends",
-            SkillsOrKnowledge = "Programming",
-            WhyVolunteer = "Want to help",
-            AdditionalComments = "Available immediately"
+            WhyVolunteer = "Want to help"
         };
-
-        _mockService
-            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<List<string>>()))
-            .Returns(true);
 
         _mockService
             .Setup(s => s.CreateAsync(It.IsAny<VolunteerApplication>()))
             .Returns(Task.CompletedTask);
 
+        _mockMessageService
+            .Setup(s => s.GetMessage(It.IsAny<string>()))
+            .Returns("Solicitud enviada exitosamente");
+
         // Act
-        var result = await _controller.Apply(application).ConfigureAwait(false);
+        var result = await _controller.Apply(application);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        _mockService.Verify(s => s.CreateAsync(application), Times.Once);
+        
+        var okResult = result as OkObjectResult;
+        var apiResponse = okResult!.Value as ApiResponse;
+        apiResponse!.Success.Should().BeTrue();
+        apiResponse.Message.Should().Be("Solicitud enviada exitosamente");
+    }
+
+    [Fact]
+    public async Task ApplyShouldPropagateExceptionWhenServiceFails()
+    {
+        // Arrange
+        var application = new VolunteerApplication
+        {
+            FullName = "Juan Pérez",
+            Email = "test@example.com",
+            City = "Quito",
+            AreasOfInterest = new List<string> { "EventOrganization" },
+            AvailableTime = "Weekends",
+            WhyVolunteer = "Want to help"
+        };
+
+        _mockService
+            .Setup(s => s.CreateAsync(It.IsAny<VolunteerApplication>()))
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act & Assert
+        await Assert.ThrowsAsync<Exception>(() => _controller.Apply(application));
+    }
+
+    [Fact]
+    public async Task GetAllApplicationsShouldReturnPagedResponse()
+    {
+        // Arrange
+        var request = new PagedRequest { Page = 1, PageSize = 10 };
+        var expectedResponse = new PagedResponse<VolunteerApplication>
+        {
+            Data = new List<VolunteerApplication>(),
+            TotalCount = 0,
+            Page = 1,
+            PageSize = 10
+        };
+
+        _mockService
+            .Setup(s => s.GetAllAsync(request))
+            .ReturnsAsync(expectedResponse);
+
+        // Act
+        var result = await _controller.GetAllApplications(request);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>();
         var okResult = result as OkObjectResult;
-        okResult!.Value.Should().Be("Solicitud de voluntariado enviada exitosamente.");
+        okResult!.Value.Should().BeOfType<ApiResponse<PagedResponse<VolunteerApplication>>>();
+        
+        var apiResponse = okResult.Value as ApiResponse<PagedResponse<VolunteerApplication>>;
+        apiResponse!.Success.Should().BeTrue();
+        apiResponse.Data.Should().Be(expectedResponse);
+        apiResponse.Message.Should().Be("Lista de solicitudes obtenida exitosamente");
+    }
 
-        _mockService.Verify(s => s.CreateAsync(application), Times.Once);
+    [Fact]
+    public async Task GetAllApplicationsShouldCallSearchWhenSearchTermProvided()
+    {
+        // Arrange
+        var request = new PagedRequest { Page = 1, PageSize = 10, Search = "Juan" };
+        var expectedResponse = new PagedResponse<VolunteerApplication>();
+
+        _mockService
+            .Setup(s => s.SearchAsync(request, "Juan"))
+            .ReturnsAsync(expectedResponse);
+
+        // Act
+        var result = await _controller.GetAllApplications(request);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        _mockService.Verify(s => s.SearchAsync(request, "Juan"), Times.Once);
+        _mockService.Verify(s => s.GetAllAsync(It.IsAny<PagedRequest>()), Times.Never);
+        
+        var okResult = result as OkObjectResult;
+        var apiResponse = okResult!.Value as ApiResponse<PagedResponse<VolunteerApplication>>;
+        apiResponse!.Success.Should().BeTrue();
+        apiResponse.Data.Should().Be(expectedResponse);
+    }
+
+    [Fact]
+    public async Task GetAllApplicationsShouldPropagateExceptionWhenServiceFails()
+    {
+        // Arrange
+        var request = new PagedRequest();
+
+        _mockService
+            .Setup(s => s.GetAllAsync(request))
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act & Assert
+        await Assert.ThrowsAsync<Exception>(() => _controller.GetAllApplications(request));
     }
 }

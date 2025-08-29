@@ -17,14 +17,5 @@ namespace DotNetEcuador.API.Models
         public string WhyVolunteer { get; set; } = string.Empty;
         public string AdditionalComments { get; set; } = string.Empty;
 
-        public bool ValidateOtherAreas()
-        {
-            if (AreasOfInterest.Contains("Other") && string.IsNullOrWhiteSpace(OtherAreas))
-            {
-                return false;
-            }
-
-            return true;
-        }
     }
 }
