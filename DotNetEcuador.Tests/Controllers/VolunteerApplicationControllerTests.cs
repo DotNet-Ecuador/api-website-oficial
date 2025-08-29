@@ -90,14 +90,11 @@ public class VolunteerApplicationControllerTests
         {
             FullName = "John Doe",
             Email = "john@example.com",
-            AreasOfInterest = new Dictionary<string, bool>
-            {
-                { "InvalidArea", true }
-            }
+            AreasOfInterest = new List<string> { "InvalidArea" }
         };
 
         _mockService
-            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<Dictionary<string, bool>>()))
+            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<List<string>>()))
             .Returns(false);
 
         // Act
@@ -117,15 +114,12 @@ public class VolunteerApplicationControllerTests
         {
             FullName = "John Doe",
             Email = "john@example.com",
-            AreasOfInterest = new Dictionary<string, bool>
-            {
-                { "Other", true }
-            },
+            AreasOfInterest = new List<string> { "Other" },
             OtherAreas = string.Empty // Empty when "Other" is selected
         };
 
         _mockService
-            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<Dictionary<string, bool>>()))
+            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<List<string>>()))
             .Returns(true);
 
         // Act
@@ -148,10 +142,7 @@ public class VolunteerApplicationControllerTests
             PhoneNumber = "123456789",
             City = "Quito",
             HasVolunteeringExperience = true,
-            AreasOfInterest = new Dictionary<string, bool>
-            {
-                { "EventOrganization", true }
-            },
+            AreasOfInterest = new List<string> { "EventOrganization" },
             AvailableTime = "Weekends",
             SkillsOrKnowledge = "Programming",
             WhyVolunteer = "Want to help",
@@ -159,7 +150,7 @@ public class VolunteerApplicationControllerTests
         };
 
         _mockService
-            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<Dictionary<string, bool>>()))
+            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<List<string>>()))
             .Returns(true);
 
         _mockService

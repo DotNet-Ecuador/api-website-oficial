@@ -11,11 +11,7 @@ public class VolunteerApplicationTests
         // Arrange
         var application = new VolunteerApplication
         {
-            AreasOfInterest = new Dictionary<string, bool>
-            {
-                { "EventOrganization", true },
-                { "ContentCreation", false }
-            },
+            AreasOfInterest = new List<string> { "EventOrganization" },
             OtherAreas = string.Empty
         };
 
@@ -32,10 +28,7 @@ public class VolunteerApplicationTests
         // Arrange
         var application = new VolunteerApplication
         {
-            AreasOfInterest = new Dictionary<string, bool>
-            {
-                { "Other", true }
-            },
+            AreasOfInterest = new List<string> { "Other" },
             OtherAreas = "Custom area of interest"
         };
 
@@ -52,10 +45,7 @@ public class VolunteerApplicationTests
         // Arrange
         var application = new VolunteerApplication
         {
-            AreasOfInterest = new Dictionary<string, bool>
-            {
-                { "Other", true }
-            },
+            AreasOfInterest = new List<string> { "Other" },
             OtherAreas = string.Empty
         };
 
@@ -72,10 +62,7 @@ public class VolunteerApplicationTests
         // Arrange
         var application = new VolunteerApplication
         {
-            AreasOfInterest = new Dictionary<string, bool>
-            {
-                { "Other", true }
-            },
+            AreasOfInterest = new List<string> { "Other" },
             OtherAreas = "   "
         };
 
@@ -92,11 +79,7 @@ public class VolunteerApplicationTests
         // Arrange
         var application = new VolunteerApplication
         {
-            AreasOfInterest = new Dictionary<string, bool>
-            {
-                { "EventOrganization", true },
-                { "ContentCreation", true }
-            },
+            AreasOfInterest = new List<string> { "EventOrganization", "ContentCreation" },
             OtherAreas = string.Empty
         };
 

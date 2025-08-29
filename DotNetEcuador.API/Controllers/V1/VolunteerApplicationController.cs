@@ -71,7 +71,7 @@ public class VolunteerApplicationController : BaseApiController
         Logger.LogInformation("Received volunteer application: FullName={FullName}, Email={Email}, AreasOfInterest={AreasCount}", 
             application.FullName, application.Email, application.AreasOfInterest?.Count ?? 0);
 
-        var isValid = _volunteerApplicationService.AreValidAreasOfInterest(application.AreasOfInterest);
+        var isValid = _volunteerApplicationService.AreValidAreasOfInterest(application.AreasOfInterest ?? new List<string>());
         var isValidOtherAreas = application.ValidateOtherAreas();
 
         Logger.LogInformation("Validation results: AreasValid={AreasValid}, OtherAreasValid={OtherAreasValid}", 
@@ -118,11 +118,7 @@ public class VolunteerApplicationController : BaseApiController
     /// <summary>
     /// Lista todas las solicitudes de voluntariado con paginación
     /// </summary>
-    /// <param name="page">Número de página (por defecto: 1)</param>
-    /// <param name="pageSize">Elementos por página (por defecto: 10, máximo: 100)</param>
-    /// <param name="search">Término de búsqueda opcional para filtrar por nombre, email o ciudad</param>
-    /// <param name="sortBy">Campo por el cual ordenar (createdAt, fullName, email, city)</param>
-    /// <param name="sortOrder">Orden de clasificación (asc, desc)</param>
+    /// <param name="request">Parámetros de paginación y filtrado</param>
     /// <returns>Lista paginada de solicitudes de voluntariado</returns>
     /// <response code="200">Lista obtenida exitosamente</response>
     /// <response code="400">Parámetros de paginación inválidos</response>
