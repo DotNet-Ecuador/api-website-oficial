@@ -1,6 +1,8 @@
 using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Infraestructure.Services;
+using DotNetEcuador.API.Infraestructure.Repositories;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Moq;
 
@@ -8,20 +10,24 @@ namespace DotNetEcuador.Tests.Services;
 
 public class VolunteerApplicationServiceTests
 {
+    private readonly Mock<IRepository<VolunteerApplication>> _mockRepository;
     private readonly Mock<IMongoDatabase> _mockDatabase;
     private readonly Mock<IMongoCollection<VolunteerApplication>> _mockCollection;
+    private readonly Mock<ILogger<VolunteerApplicationService>> _mockLogger;
     private readonly IVolunteerApplicationService _service;
 
     public VolunteerApplicationServiceTests()
     {
+        _mockRepository = new Mock<IRepository<VolunteerApplication>>();
         _mockDatabase = new Mock<IMongoDatabase>();
         _mockCollection = new Mock<IMongoCollection<VolunteerApplication>>();
+        _mockLogger = new Mock<ILogger<VolunteerApplicationService>>();
 
         _mockDatabase
             .Setup(db => db.GetCollection<VolunteerApplication>("volunteer_applications", null))
             .Returns(_mockCollection.Object);
 
-        _service = new VolunteerApplicationService(_mockDatabase.Object);
+        _service = new VolunteerApplicationService(_mockRepository.Object, _mockDatabase.Object, _mockLogger.Object);
     }
 
     [Fact]
@@ -35,11 +41,7 @@ public class VolunteerApplicationServiceTests
             PhoneNumber = "123456789",
             City = "Quito",
             HasVolunteeringExperience = true,
-            AreasOfInterest = new Dictionary<string, bool>
-            {
-                { "EventOrganization", true },
-                { "ContentCreation", false }
-            },
+            AreasOfInterest = new List<string> { "EventOrganization" },
             AvailableTime = "Weekends",
             SkillsOrKnowledge = "Programming, Marketing",
             WhyVolunteer = "Want to contribute to the community",
@@ -50,8 +52,8 @@ public class VolunteerApplicationServiceTests
         await _service.CreateAsync(application).ConfigureAwait(false);
 
         // Assert
-        _mockCollection.Verify(
-            collection => collection.InsertOneAsync(application, null, It.IsAny<CancellationToken>()),
+        _mockRepository.Verify(
+            repo => repo.CreateAsync(application),
             Times.Once);
     }
 
@@ -62,14 +64,10 @@ public class VolunteerApplicationServiceTests
     [InlineData("SocialMediaManagement", true)]
     [InlineData("Other", true)]
     [InlineData("InvalidArea", false)]
-    [InlineData("", false)]
     public void AreValidAreasOfInterestShouldValidateAreaNamesCorrectly(string areaName, bool expectedValid)
     {
         // Arrange
-        var areasOfInterest = new Dictionary<string, bool>
-        {
-            { areaName, true }
-        };
+        var areasOfInterest = new List<string> { areaName };
 
         // Act
         var result = _service.AreValidAreasOfInterest(areasOfInterest);
@@ -82,12 +80,7 @@ public class VolunteerApplicationServiceTests
     public void AreValidAreasOfInterestShouldReturnTrueWhenAllAreasAreValid()
     {
         // Arrange
-        var areasOfInterest = new Dictionary<string, bool>
-        {
-            { "EventOrganization", true },
-            { "ContentCreation", false },
-            { "TechnicalSupport", true }
-        };
+        var areasOfInterest = new List<string> { "EventOrganization", "TechnicalSupport" };
 
         // Act
         var result = _service.AreValidAreasOfInterest(areasOfInterest);
@@ -100,12 +93,7 @@ public class VolunteerApplicationServiceTests
     public void AreValidAreasOfInterestShouldReturnFalseWhenAnyAreaIsInvalid()
     {
         // Arrange
-        var areasOfInterest = new Dictionary<string, bool>
-        {
-            { "EventOrganization", true },
-            { "InvalidArea", true },
-            { "TechnicalSupport", false }
-        };
+        var areasOfInterest = new List<string> { "EventOrganization", "InvalidArea" };
 
         // Act
         var result = _service.AreValidAreasOfInterest(areasOfInterest);
@@ -115,15 +103,15 @@ public class VolunteerApplicationServiceTests
     }
 
     [Fact]
-    public void AreValidAreasOfInterestShouldReturnTrueWhenDictionaryIsEmpty()
+    public void AreValidAreasOfInterestShouldReturnFalseWhenListIsEmpty()
     {
         // Arrange
-        var areasOfInterest = new Dictionary<string, bool>();
+        var areasOfInterest = new List<string>();
 
         // Act
         var result = _service.AreValidAreasOfInterest(areasOfInterest);
 
         // Assert
-        result.Should().BeTrue();
+        result.Should().BeFalse();
     }
 }

@@ -1,0 +1,11 @@
+{
+  "v.fullName": "Full name must be at least 3 characters long.",
+  "v.email": "Email address is not in a valid format.",
+  "v.areas": "Some of the selected areas of interest are not valid.",
+  "v.otherAreas": "The 'Other areas of interest' field must contain a value if selected.",
+  "s.volunteerSent": "Volunteer application sent successfully.",
+  "s.memberAdded": "Member added successfully.",
+  "e.server": "Internal server error",
+  "e.token": "Invalid token",
+  "e.unauthorized": "Unauthorized"
+}

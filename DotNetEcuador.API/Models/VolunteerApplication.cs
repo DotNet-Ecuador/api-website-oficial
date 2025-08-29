@@ -10,7 +10,7 @@ namespace DotNetEcuador.API.Models
         public string PhoneNumber { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
         public bool HasVolunteeringExperience { get; set; }
-        public Dictionary<string, bool> AreasOfInterest { get; set; } = new Dictionary<string, bool>();
+        public List<string> AreasOfInterest { get; set; } = new List<string>();
         public string OtherAreas { get; set; } = string.Empty;
         public string AvailableTime { get; set; } = string.Empty;
         public string SkillsOrKnowledge { get; set; } = string.Empty;
@@ -19,7 +19,7 @@ namespace DotNetEcuador.API.Models
 
         public bool ValidateOtherAreas()
         {
-            if (AreasOfInterest.ContainsKey("Other") && string.IsNullOrWhiteSpace(OtherAreas))
+            if (AreasOfInterest.Contains("Other") && string.IsNullOrWhiteSpace(OtherAreas))
             {
                 return false;
             }

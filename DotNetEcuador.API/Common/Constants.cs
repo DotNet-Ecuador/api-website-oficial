@@ -6,8 +6,9 @@ public static class Constants
 
     public static class MongoCollections
     {
+        public const string USERS = "users";
         public const string AREAINTEREST = "area_interes";
         public const string COMMUNITYMEMBER = "community_member";
-        public const string VOLUNTEERAPPLICATION = "volunteer_application";
+        public const string VOLUNTEERAPPLICATION = "volunteer_applications";
     }
 }

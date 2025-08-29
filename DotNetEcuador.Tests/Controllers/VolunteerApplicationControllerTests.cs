@@ -1,8 +1,10 @@
-using Api.Controllers;
+using DotNetEcuador.API.Controllers.V1;
 using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Infraestructure.Services;
+using DotNetEcuador.API.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Moq;
 
@@ -11,12 +13,16 @@ namespace DotNetEcuador.Tests.Controllers;
 public class VolunteerApplicationControllerTests
 {
     private readonly Mock<IVolunteerApplicationService> _mockService;
+    private readonly Mock<IMessageService> _mockMessageService;
+    private readonly Mock<ILogger<VolunteerApplicationController>> _mockLogger;
     private readonly VolunteerApplicationController _controller;
 
     public VolunteerApplicationControllerTests()
     {
         _mockService = new Mock<IVolunteerApplicationService>();
-        _controller = new VolunteerApplicationController(_mockService.Object);
+        _mockMessageService = new Mock<IMessageService>();
+        _mockLogger = new Mock<ILogger<VolunteerApplicationController>>();
+        _controller = new VolunteerApplicationController(_mockService.Object, _mockMessageService.Object, _mockLogger.Object);
     }
 
     [Fact]
@@ -84,14 +90,11 @@ public class VolunteerApplicationControllerTests
         {
             FullName = "John Doe",
             Email = "john@example.com",
-            AreasOfInterest = new Dictionary<string, bool>
-            {
-                { "InvalidArea", true }
-            }
+            AreasOfInterest = new List<string> { "InvalidArea" }
         };
 
         _mockService
-            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<Dictionary<string, bool>>()))
+            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<List<string>>()))
             .Returns(false);
 
         // Act
@@ -111,15 +114,12 @@ public class VolunteerApplicationControllerTests
         {
             FullName = "John Doe",
             Email = "john@example.com",
-            AreasOfInterest = new Dictionary<string, bool>
-            {
-                { "Other", true }
-            },
+            AreasOfInterest = new List<string> { "Other" },
             OtherAreas = string.Empty // Empty when "Other" is selected
         };
 
         _mockService
-            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<Dictionary<string, bool>>()))
+            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<List<string>>()))
             .Returns(true);
 
         // Act
@@ -142,10 +142,7 @@ public class VolunteerApplicationControllerTests
             PhoneNumber = "123456789",
             City = "Quito",
             HasVolunteeringExperience = true,
-            AreasOfInterest = new Dictionary<string, bool>
-            {
-                { "EventOrganization", true }
-            },
+            AreasOfInterest = new List<string> { "EventOrganization" },
             AvailableTime = "Weekends",
             SkillsOrKnowledge = "Programming",
             WhyVolunteer = "Want to help",
@@ -153,7 +150,7 @@ public class VolunteerApplicationControllerTests
         };
 
         _mockService
-            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<Dictionary<string, bool>>()))
+            .Setup(s => s.AreValidAreasOfInterest(It.IsAny<List<string>>()))
             .Returns(true);
 
         _mockService

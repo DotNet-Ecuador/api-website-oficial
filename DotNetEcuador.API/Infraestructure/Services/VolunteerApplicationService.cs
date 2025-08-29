@@ -1,42 +1,87 @@
-﻿using DotNetEcuador.API.Models;
+using DotNetEcuador.API.Common;
+using DotNetEcuador.API.Infraestructure.Extensions;
+using DotNetEcuador.API.Infraestructure.Repositories;
+using DotNetEcuador.API.Models;
+using DotNetEcuador.API.Models.Common;
 using MongoDB.Driver;
 
 namespace DotNetEcuador.API.Infraestructure.Services
 {
     public class VolunteerApplicationService : IVolunteerApplicationService
     {
-        private readonly IMongoCollection<VolunteerApplication> _volunteerApplicationCollection;
+        private readonly IRepository<VolunteerApplication> _repository;
+        private readonly IMongoCollection<VolunteerApplication> _collection;
+        private readonly ILogger<VolunteerApplicationService> _logger;
 
-        public VolunteerApplicationService(IMongoDatabase database)
+        public VolunteerApplicationService(IRepository<VolunteerApplication> repository, IMongoDatabase database, ILogger<VolunteerApplicationService> logger)
         {
-            _volunteerApplicationCollection = database.GetCollection<VolunteerApplication>("volunteer_applications");
+            _repository = repository;
+            _collection = database.GetCollection<VolunteerApplication>(Constants.MongoCollections.VOLUNTEERAPPLICATION);
+            _logger = logger;
         }
 
         public async Task CreateAsync(VolunteerApplication volunteerApplication)
         {
-            await _volunteerApplicationCollection.InsertOneAsync(volunteerApplication).ConfigureAwait(false);
+            try
+            {
+                _logger.LogInformation("Attempting to save VolunteerApplication to collection: {CollectionName}", Constants.MongoCollections.VOLUNTEERAPPLICATION);
+                _logger.LogInformation("Application details: Name={FullName}, Email={Email}, Areas={AreasCount}", 
+                    volunteerApplication.FullName, volunteerApplication.Email, volunteerApplication.AreasOfInterest?.Count ?? 0);
+                
+                await _repository.CreateAsync(volunteerApplication);
+                
+                _logger.LogInformation("VolunteerApplication saved successfully to database");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save VolunteerApplication to database");
+                throw;
+            }
         }
 
-        private readonly Dictionary<string, string> _areasOfInterest = new Dictionary<string, string>
+        private readonly HashSet<string> _validAreasOfInterest = new HashSet<string>
         {
-            { "EventOrganization", "Ayuda en la organización de eventos comunitarios" },
-            { "ContentCreation", "Creación de contenido digital para la comunidad" },
-            { "TechnicalSupport", "Brindar soporte técnico a proyectos de la comunidad" },
-            { "SocialMediaManagement", "Administración de redes sociales para la comunidad" },
-            { "Other", "Otras áreas de interés" }
+            "EventOrganization",
+            "ContentCreation", 
+            "TechnicalSupport",
+            "SocialMediaManagement",
+            "Other"
         };
 
-        public bool AreValidAreasOfInterest(Dictionary<string, bool> selectedAreas)
+        public bool AreValidAreasOfInterest(List<string> selectedAreas)
         {
+            if (selectedAreas == null || selectedAreas.Count == 0)
+            {
+                return false;
+            }
+
             foreach (var area in selectedAreas)
             {
-                if (area.Value && !_areasOfInterest.ContainsKey(area.Key))
+                if (string.IsNullOrWhiteSpace(area) || !_validAreasOfInterest.Contains(area))
                 {
                     return false;
                 }
             }
 
             return true;
+        }
+
+        public async Task<PagedResponse<VolunteerApplication>> GetAllAsync(PagedRequest request)
+        {
+            return await _repository.GetPagedAsync(request);
+        }
+
+        public async Task<PagedResponse<VolunteerApplication>> SearchAsync(PagedRequest request, string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return await GetAllAsync(request);
+            }
+
+            return await _collection.ToPagedResponseAsync(request, app => 
+                app.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                app.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                app.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
     }
 }
