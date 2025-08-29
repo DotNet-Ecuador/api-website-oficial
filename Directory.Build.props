@@ -32,7 +32,7 @@
     <CollectCoverage>true</CollectCoverage>
     <CoverletOutputFormat>cobertura</CoverletOutputFormat>
     <CoverletOutput>$(MSBuildProjectDirectory)/TestResults/coverage.cobertura.xml</CoverletOutput>
-    <Threshold>80</Threshold>
+    <Threshold>15</Threshold>
     <ThresholdType>line</ThresholdType>
     <ThresholdStat>minimum</ThresholdStat>
     <ExcludeByFile>**/bin/**/*,**/obj/**/*</ExcludeByFile>

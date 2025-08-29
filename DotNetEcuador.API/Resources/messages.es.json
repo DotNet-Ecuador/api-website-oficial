@@ -1,0 +1,12 @@
+{
+  "v.fullName": "El nombre completo debe tener al menos 3 caracteres.",
+  "v.email": "El correo electrónico no tiene un formato válido.",
+  "v.areas": "Algunas de las áreas de interés seleccionadas no son válidas.",
+  "v.otherAreas": "El campo 'Otras áreas de interés' debe contener un valor si se selecciona.",
+  "s.volunteerSent": "Solicitud de voluntariado enviada exitosamente.",
+  "s.memberAdded": "Miembro agregado exitosamente.",
+  "e.server": "Error interno del servidor",
+  "e.token": "Token inválido",
+  "e.unauthorized": "No autorizado",
+  "e.invalidToken": "Token inválido"
+}

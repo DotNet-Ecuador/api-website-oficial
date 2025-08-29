@@ -1,8 +1,10 @@
-using Api.Controllers;
+using DotNetEcuador.API.Controllers.V1;
 using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Infraestructure.Services;
+using DotNetEcuador.API.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Moq;
 
@@ -11,12 +13,16 @@ namespace DotNetEcuador.Tests.Controllers;
 public class VolunteerApplicationControllerTests
 {
     private readonly Mock<IVolunteerApplicationService> _mockService;
+    private readonly Mock<IMessageService> _mockMessageService;
+    private readonly Mock<ILogger<VolunteerApplicationController>> _mockLogger;
     private readonly VolunteerApplicationController _controller;
 
     public VolunteerApplicationControllerTests()
     {
         _mockService = new Mock<IVolunteerApplicationService>();
-        _controller = new VolunteerApplicationController(_mockService.Object);
+        _mockMessageService = new Mock<IMessageService>();
+        _mockLogger = new Mock<ILogger<VolunteerApplicationController>>();
+        _controller = new VolunteerApplicationController(_mockService.Object, _mockMessageService.Object, _mockLogger.Object);
     }
 
     [Fact]

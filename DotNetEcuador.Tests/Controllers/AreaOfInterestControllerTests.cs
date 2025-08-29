@@ -1,8 +1,10 @@
-using Api.Controllers;
+using DotNetEcuador.API.Controllers.V1;
 using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Infraestructure.Services;
+using DotNetEcuador.API.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace DotNetEcuador.Tests.Controllers;
@@ -10,12 +12,16 @@ namespace DotNetEcuador.Tests.Controllers;
 public class AreaOfInterestControllerTests
 {
     private readonly Mock<IAreaOfInterestService> _mockService;
+    private readonly Mock<IMessageService> _mockMessageService;
+    private readonly Mock<ILogger<AreaOfInterestController>> _mockLogger;
     private readonly AreaOfInterestController _controller;
 
     public AreaOfInterestControllerTests()
     {
         _mockService = new Mock<IAreaOfInterestService>();
-        _controller = new AreaOfInterestController(_mockService.Object);
+        _mockMessageService = new Mock<IMessageService>();
+        _mockLogger = new Mock<ILogger<AreaOfInterestController>>();
+        _controller = new AreaOfInterestController(_mockService.Object, _mockMessageService.Object, _mockLogger.Object);
     }
 
     [Fact]
