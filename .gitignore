@@ -25,11 +25,16 @@
 **/coverage.*.xml
 **/CoverageReport/
 **/.sonarqube/
+**/sonar-scanner-output/
 **/stylecop.cache
 **/CodeAnalysisLog.xml
 **/CodeAnalysisReport.xml
 **/*.tmp
 **/*.temp
+
+# SonarQube specific files
+.scannerwork/
+sonar-scanner-output/
 
 # Security and sensitive files
 **/*.key

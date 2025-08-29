@@ -359,6 +359,117 @@ dotnet run --project DotNetEcuador.API --verbosity diagnostic
 }
 ```
 
+## 🔍 Análisis de Código con SonarQube
+
+### Configuración de SonarQube con Docker
+
+Este proyecto incluye configuración completa de SonarQube para análisis manual de calidad de código, cobertura de tests y detección de vulnerabilidades.
+
+#### 1. Iniciar SonarQube
+
+```bash
+# Iniciar SonarQube y PostgreSQL
+docker-compose -f docker-compose.sonarqube.yml up -d
+
+# Verificar que esté ejecutándose
+docker-compose -f docker-compose.sonarqube.yml ps
+```
+
+#### 2. Configuración Inicial
+
+1. **Acceder a SonarQube**: http://localhost:9000
+2. **Login inicial**: `admin` / `admin`
+3. **Cambiar contraseña** en el primer acceso
+4. **Generar token** (opcional pero recomendado):
+   - Ir a: My Account > Security > Generate Tokens
+   - Copiar el token generado
+
+#### 3. Ejecutar Análisis de Código
+
+**Windows (PowerShell)**:
+```powershell
+# Análisis básico
+.\scripts\sonar-analysis.ps1
+
+# Con token personalizado
+.\scripts\sonar-analysis.ps1 -Token "tu_token_aqui"
+```
+
+**Windows (CMD)**:
+```cmd
+scripts\sonar-analysis.bat
+```
+
+**Linux/macOS**:
+```bash
+# Análisis básico
+./scripts/sonar-analysis.sh
+
+# Con parámetros personalizados
+./scripts/sonar-analysis.sh --token "tu_token_aqui" --project-key "mi-proyecto"
+```
+
+#### 4. Ver Resultados
+
+- **Dashboard**: http://localhost:9000/dashboard?id=dotnet-ecuador-api
+- **Issues**: http://localhost:9000/project/issues?id=dotnet-ecuador-api
+- **Coverage**: http://localhost:9000/component_measures?id=dotnet-ecuador-api&metric=coverage
+
+### Métricas Incluidas
+
+- ✅ **Bugs y Vulnerabilidades**
+- ✅ **Code Smells y Deuda Técnica**
+- ✅ **Cobertura de Tests**
+- ✅ **Duplicación de Código**
+- ✅ **Complejidad Ciclomática**
+- ✅ **Cumplimiento con Estándares .NET**
+
+### Comandos Útiles
+
+```bash
+# Detener SonarQube
+docker-compose -f docker-compose.sonarqube.yml down
+
+# Ver logs de SonarQube
+docker-compose -f docker-compose.sonarqube.yml logs -f sonarqube
+
+# Limpiar datos (CUIDADO: elimina todos los análisis)
+docker-compose -f docker-compose.sonarqube.yml down -v
+
+# Reinstalar SonarScanner global
+dotnet tool uninstall --global dotnet-sonarscanner
+dotnet tool install --global dotnet-sonarscanner
+```
+
+### Troubleshooting SonarQube
+
+#### Error: "SonarQube no está disponible"
+```bash
+# Verificar estado de contenedores
+docker-compose -f docker-compose.sonarqube.yml ps
+
+# Reiniciar servicios
+docker-compose -f docker-compose.sonarqube.yml restart
+```
+
+#### Error: "Insufficient memory"
+```bash
+# Aumentar memoria de Docker (Docker Desktop > Settings > Resources)
+# O configurar en el sistema:
+echo 'vm.max_map_count=524288' | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
+
+#### Error en análisis de .NET
+```bash
+# Limpiar y reinstalar herramientas
+dotnet clean
+dotnet restore
+dotnet tool update --global dotnet-sonarscanner
+```
+
+---
+
 ## Configuraciones Avanzadas
 
 ### MongoDB con Autenticación (Producción)
