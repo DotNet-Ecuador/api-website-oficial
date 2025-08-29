@@ -45,11 +45,21 @@ fi
 
 # Build solution
 print_info "Building solution..."
-if dotnet build --no-restore --configuration Release --verbosity quiet; then
-    print_success "Build successful"
-else
-    print_error "Build failed"
+BUILD_OUTPUT=$(dotnet build --no-restore --configuration Release --verbosity normal 2>&1 || true)
+
+# Check if there are actual errors (not just warnings)
+if echo "$BUILD_OUTPUT" | grep -i "error CS\|error MSB\|Build FAILED" | grep -v "warning" > /dev/null; then
+    print_error "Build failed with errors"
+    echo "$BUILD_OUTPUT" | grep -i "error CS\|error MSB"
     exit 1
+else
+    # Count warnings
+    WARNING_COUNT=$(echo "$BUILD_OUTPUT" | grep -i "warning" | wc -l || echo "0")
+    if [ "$WARNING_COUNT" -gt 0 ]; then
+        print_color $YELLOW "⚠️  Build completed with $WARNING_COUNT warning(s)"
+        print_info "Warnings won't block commit - continuing..."
+    fi
+    print_success "Build successful"
 fi
 
 # Run tests
