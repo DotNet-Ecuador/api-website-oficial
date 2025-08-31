@@ -1,0 +1,44 @@
+[Unit]
+Description=DotNet Ecuador API
+Documentation=https://github.com/DotNet-Ecuador/api-website-oficial
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+# Service will run as www-data user for security
+User=www-data
+Group=www-data
+
+# Application settings
+WorkingDirectory=/opt/dotnet-ecuador-api/app
+ExecStart=/usr/bin/dotnet /opt/dotnet-ecuador-api/app/DotNetEcuador.API.dll
+Restart=always
+RestartSec=10
+
+# Environment variables file
+EnvironmentFile=/etc/systemd/system/dotnet-ecuador-api.env
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/dotnet-ecuador-api/logs
+
+# Resource limits
+MemoryLimit=512M
+CPUQuota=50%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=dotnet-ecuador-api
+
+# Graceful shutdown
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

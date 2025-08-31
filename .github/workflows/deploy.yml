@@ -1,0 +1,109 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build application
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Publish application
+      run: dotnet publish DotNetEcuador.API/DotNetEcuador.API.csproj -c Release -o ./publish --no-build
+
+    - name: Create deployment package
+      run: |
+        mkdir -p deployment-package
+        cp -r ./publish/* deployment-package/
+        cp -r scripts/ deployment-package/
+        cp -r systemd/ deployment-package/
+        cp appsettings.Production.json deployment-package/
+
+    - name: Transfer files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: ${{ secrets.VPS_PORT }}
+        source: "deployment-package/*"
+        target: "/tmp/dotnet-ecuador-deployment"
+        strip_components: 1
+
+    - name: Deploy on server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: ${{ secrets.VPS_PORT }}
+        script: |
+          # Set environment variables
+          export MONGO_CONNECTION_STRING="${{ secrets.MONGO_CONNECTION_STRING }}"
+          export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
+          export JWT_ISSUER="${{ secrets.JWT_ISSUER }}"
+          export JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}"
+          export JWT_ACCESS_TOKEN_EXPIRATION="${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION }}"
+          export JWT_REFRESH_TOKEN_EXPIRATION="${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}"
+          export APP_PATH="${{ secrets.APP_PATH }}"
+          
+          # Make deployment script executable
+          chmod +x /tmp/dotnet-ecuador-deployment/scripts/deploy-server.sh
+          
+          # Execute deployment
+          /tmp/dotnet-ecuador-deployment/scripts/deploy-server.sh
+
+    - name: Health Check
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: ${{ secrets.VPS_PORT }}
+        script: |
+          # Wait for service to start
+          sleep 10
+          
+          # Check service status
+          sudo systemctl is-active --quiet dotnet-ecuador-api
+          if [ $? -eq 0 ]; then
+            echo "✅ Service is running"
+          else
+            echo "❌ Service failed to start"
+            sudo systemctl status dotnet-ecuador-api
+            exit 1
+          fi
+          
+          # Check HTTP endpoint
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health || echo "000")
+          if [ "$response" = "200" ]; then
+            echo "✅ Health check passed"
+          else
+            echo "❌ Health check failed (HTTP $response)"
+            exit 1
+          fi
+
+    - name: Cleanup temporary files
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: ${{ secrets.VPS_PORT }}
+        script: |
+          rm -rf /tmp/dotnet-ecuador-deployment
