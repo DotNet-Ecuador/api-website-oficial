@@ -48,7 +48,7 @@ public class GlobalExceptionMiddleware
                 "duplicate-email",
                 ex.Message,
                 context.Request.Path,
-                409,
+                400,
                 traceId),
 
             UnauthorizedAccessException _ => ApiError.BusinessError(

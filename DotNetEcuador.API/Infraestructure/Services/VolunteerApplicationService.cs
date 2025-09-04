@@ -37,6 +37,9 @@ namespace DotNetEcuador.API.Infraestructure.Services
                     throw new DuplicateEmailException(volunteerApplication.Email);
                 }
                 
+                // Asignar fecha de creación automáticamente
+                volunteerApplication.CreatedAt = DateTime.UtcNow;
+                
                 await _repository.CreateAsync(volunteerApplication);
                 
                 _logger.LogInformation("VolunteerApplication saved successfully to database");

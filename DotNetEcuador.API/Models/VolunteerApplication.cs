@@ -17,6 +17,7 @@ namespace DotNetEcuador.API.Models
         public string SkillsOrKnowledge { get; set; } = string.Empty;
         public string WhyVolunteer { get; set; } = string.Empty;
         public string AdditionalComments { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
 
     }
 }
