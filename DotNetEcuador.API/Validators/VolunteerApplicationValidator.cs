@@ -43,6 +43,12 @@ public class VolunteerApplicationValidator : AbstractValidator<VolunteerApplicat
             .MaximumLength(100)
             .WithMessage("La ciudad no puede exceder los 100 caracteres");
 
+        RuleFor(x => x.Country)
+            .NotEmpty()
+            .WithMessage("El país es requerido")
+            .MaximumLength(100)
+            .WithMessage("El país no puede exceder los 100 caracteres");
+
         RuleFor(x => x.AreasOfInterest)
             .NotEmpty()
             .WithMessage("Debe seleccionar al menos un área de interés")

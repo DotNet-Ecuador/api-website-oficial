@@ -1,0 +1,519 @@
+{
+	"info": {
+		"name": "DotNet Ecuador API",
+		"description": "API para la comunidad DotNet Ecuador - Gestión de miembros, voluntarios y autenticación",
+		"version": "1.0.0",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://localhost:7209",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"usuario@ejemplo.com\",\n  \"password\": \"Password123!\",\n  \"fullName\": \"Juan Pérez González\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Registra un nuevo usuario en el sistema"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', jsonData.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', jsonData.refreshToken);",
+									"    pm.test('Access token saved', function () {",
+									"        pm.expect(jsonData.accessToken).to.exist;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"usuario@ejemplo.com\",\n  \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Inicia sesión de un usuario existente y obtiene tokens JWT"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', jsonData.accessToken);",
+									"    pm.collectionVariables.set('refreshToken', jsonData.refreshToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/refresh",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "refresh"]
+						},
+						"description": "Renueva el token de acceso usando un refresh token válido"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "me"]
+						},
+						"description": "Obtiene el perfil del usuario autenticado actual"
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"Password123!\",\n  \"newPassword\": \"NewPassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "password"]
+						},
+						"description": "Cambia la contraseña del usuario autenticado"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "logout"]
+						},
+						"description": "Cierra la sesión del usuario y revoca todos los refresh tokens"
+					},
+					"response": []
+				},
+				{
+					"name": "Revoke Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/revoke",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "revoke"]
+						},
+						"description": "Revoca un refresh token específico"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de autenticación y gestión de usuarios"
+		},
+		{
+			"name": "Community Members",
+			"item": [
+				{
+					"name": "Register Community Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"María González Pérez\",\n  \"email\": \"maria.gonzalez@ejemplo.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/community-member",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "community-member"]
+						},
+						"description": "Registra un nuevo miembro en la comunidad DotNet Ecuador"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestión de miembros de la comunidad"
+		},
+		{
+			"name": "Areas of Interest",
+			"item": [
+				{
+					"name": "Get All Areas of Interest",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/area-interest",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "area-interest"]
+						},
+						"description": "Obtiene todas las áreas de interés disponibles para voluntariado"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Area of Interest",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"MentorshipProgram\",\n  \"description\": \"Programa de mentoría para nuevos desarrolladores\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/area-interest",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "area-interest"]
+						},
+						"description": "Crea una nueva área de interés para voluntariado"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestión de áreas de interés para voluntarios"
+		},
+		{
+			"name": "Volunteer Applications",
+			"item": [
+				{
+					"name": "Submit Volunteer Application",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Juan Pérez González\",\n  \"email\": \"juan@ejemplo.com\",\n  \"phoneNumber\": \"+593987654321\",\n  \"city\": \"Quito\",\n  \"hasVolunteeringExperience\": true,\n  \"areasOfInterest\": [\n    \"EventOrganization\",\n    \"TechnicalSupport\"\n  ],\n  \"otherAreas\": \"\",\n  \"availableTime\": \"Fines de semana y noches entre semana\",\n  \"skillsOrKnowledge\": \"Programación en C#, .NET, Azure\",\n  \"whyVolunteer\": \"Quiero contribuir al crecimiento de la comunidad .NET\",\n  \"additionalComments\": \"Disponible para eventos presenciales en Quito\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/volunteer-application/apply",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "volunteer-application", "apply"]
+						},
+						"description": "Envía una solicitud de voluntariado para unirse a la comunidad"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Applications (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/volunteer-application?page=1&pageSize=10&sortBy=fullName&sortOrder=asc",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "volunteer-application"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Número de página"
+								},
+								{
+									"key": "pageSize",
+									"value": "10",
+									"description": "Elementos por página (1-100)"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Buscar en nombre, email o ciudad",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "fullName",
+									"description": "Campo para ordenar"
+								},
+								{
+									"key": "sortOrder",
+									"value": "asc",
+									"description": "Orden: asc o desc"
+								}
+							]
+						},
+						"description": "Lista todas las solicitudes de voluntariado con paginación (requiere autenticación)"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Applications (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/volunteer-application?page=1&pageSize=10&search=juan&sortBy=fullName&sortOrder=asc",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "volunteer-application"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": "juan",
+									"description": "Buscar por nombre, email o ciudad"
+								},
+								{
+									"key": "sortBy",
+									"value": "fullName"
+								},
+								{
+									"key": "sortOrder",
+									"value": "asc"
+								}
+							]
+						},
+						"description": "Busca solicitudes de voluntariado por texto (requiere autenticación)"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestión de solicitudes de voluntariado"
+		},
+		{
+			"name": "Debug Endpoints",
+			"item": [
+				{
+					"name": "Get User Claims (Debug)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/volunteer-application/debug/claims",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "volunteer-application", "debug", "claims"]
+						},
+						"description": "Endpoint temporal para verificar claims del usuario autenticado"
+					},
+					"response": []
+				},
+				{
+					"name": "Seed Test Data (Debug)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/volunteer-application/debug/seed",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "volunteer-application", "debug", "seed"]
+						},
+						"description": "Endpoint temporal para crear datos de prueba de solicitudes de voluntariado"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify MongoDB Connection (Debug)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/volunteer-application/debug/mongodb",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "volunteer-application", "debug", "mongodb"]
+						},
+						"description": "Endpoint temporal para verificar la configuración de MongoDB"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de debug y testing (temporales)"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
