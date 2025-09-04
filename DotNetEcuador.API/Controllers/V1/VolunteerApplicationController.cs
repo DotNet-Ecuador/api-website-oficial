@@ -146,11 +146,11 @@ public class VolunteerApplicationController : BaseApiController
     {
         // FluentValidation will handle validation automatically via ValidationActionFilter
         // Debug: Log user claims
-        var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? 
-                      User.FindFirst("role")?.Value ?? 
+        var userRole = User?.FindFirst(ClaimTypes.Role)?.Value ?? 
+                      User?.FindFirst("role")?.Value ?? 
                       "No role found";
-        var userId = User.FindFirst("userId")?.Value ?? "No userId found";
-        var allClaims = User.Claims.Select(c => $"{c.Type}={c.Value}");
+        var userId = User?.FindFirst("userId")?.Value ?? "No userId found";
+        var allClaims = User?.Claims?.Select(c => $"{c.Type}={c.Value}") ?? Enumerable.Empty<string>();
         Logger.LogInformation("User requesting volunteer applications - UserId: {UserId}, Role: {Role}, All Claims: {Claims}", 
             userId, userRole, string.Join(", ", allClaims));
 

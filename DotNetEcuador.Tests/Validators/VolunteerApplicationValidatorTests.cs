@@ -114,6 +114,7 @@ public class VolunteerApplicationValidatorTests
             FullName = "Juan Pérez",
             Email = "juan@ejemplo.com",
             City = "Quito",
+            Country = "Ecuador",
             AreasOfInterest = new List<string> { "Other" },
             OtherAreas = "Mentoring",
             AvailableTime = "Weekends",
@@ -134,6 +135,7 @@ public class VolunteerApplicationValidatorTests
             FullName = "Juan Pérez González",
             Email = "juan@ejemplo.com",
             City = "Quito",
+            Country = "Ecuador",
             AreasOfInterest = new List<string> { "EventOrganization", "TechnicalSupport" },
             AvailableTime = "Weekends and evenings",
             WhyVolunteer = "I want to contribute to the community"

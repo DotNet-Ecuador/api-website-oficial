@@ -3,107 +3,53 @@ name: Deploy to VPS
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Setup .NET
+      
+    - name: Setup .NET 8
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
-
+        
     - name: Restore dependencies
-      run: dotnet restore
-
+      run: dotnet restore DotNetEcuador.API/DotNetEcuador.API.csproj
+      
     - name: Build application
-      run: dotnet build --configuration Release --no-restore
-
+      run: dotnet build DotNetEcuador.API/DotNetEcuador.API.csproj --configuration Release --no-restore
+      
     - name: Publish application
       run: dotnet publish DotNetEcuador.API/DotNetEcuador.API.csproj -c Release -o ./publish --no-build
-
-    - name: Create deployment package
-      run: |
-        mkdir -p deployment-package
-        cp -r ./publish/* deployment-package/
-        cp -r scripts/ deployment-package/
-        cp -r systemd/ deployment-package/
-        cp appsettings.Production.json deployment-package/
-
-    - name: Transfer files to server
+      
+    - name: Deploy to VPS
       uses: appleboy/scp-action@v0.1.7
       with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        port: ${{ secrets.VPS_PORT }}
-        source: "deployment-package/*"
-        target: "/tmp/dotnet-ecuador-deployment"
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT || 22 }}
+        source: "./publish/*"
+        target: "/var/www/dotnetecuador-api/api-website-oficial/DotNetEcuador.API/publish/"
         strip_components: 1
+        overwrite: true
 
-    - name: Deploy on server
+    - name: Restart service and check status
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        port: ${{ secrets.VPS_PORT }}
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT || 22 }}
         script: |
-          # Set environment variables
-          export MONGO_CONNECTION_STRING="${{ secrets.MONGO_CONNECTION_STRING }}"
-          export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
-          export JWT_ISSUER="${{ secrets.JWT_ISSUER }}"
-          export JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}"
-          export JWT_ACCESS_TOKEN_EXPIRATION="${{ secrets.JWT_ACCESS_TOKEN_EXPIRATION }}"
-          export JWT_REFRESH_TOKEN_EXPIRATION="${{ secrets.JWT_REFRESH_TOKEN_EXPIRATION }}"
-          export APP_PATH="${{ secrets.APP_PATH }}"
-          
-          # Make deployment script executable
-          chmod +x /tmp/dotnet-ecuador-deployment/scripts/deploy-server.sh
-          
-          # Execute deployment
-          /tmp/dotnet-ecuador-deployment/scripts/deploy-server.sh
-
-    - name: Health Check
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        port: ${{ secrets.VPS_PORT }}
-        script: |
-          # Wait for service to start
-          sleep 10
-          
-          # Check service status
-          sudo systemctl is-active --quiet dotnet-ecuador-api
-          if [ $? -eq 0 ]; then
-            echo "✅ Service is running"
-          else
-            echo "❌ Service failed to start"
-            sudo systemctl status dotnet-ecuador-api
-            exit 1
-          fi
-          
-          # Check HTTP endpoint
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health || echo "000")
-          if [ "$response" = "200" ]; then
-            echo "✅ Health check passed"
-          else
-            echo "❌ Health check failed (HTTP $response)"
-            exit 1
-          fi
-
-    - name: Cleanup temporary files
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        port: ${{ secrets.VPS_PORT }}
-        script: |
-          rm -rf /tmp/dotnet-ecuador-deployment
+          sudo chown -R www-data:www-data /var/www/dotnetecuador-api/api-website-oficial/DotNetEcuador.API/publish/
+          sudo chmod -R 755 /var/www/dotnetecuador-api/api-website-oficial/DotNetEcuador.API/publish/
+          sudo systemctl restart dotnetecuador-api
+          sleep 5
+          sudo systemctl status dotnetecuador-api --no-pager
+          echo "✅ Deployment completed successfully"
