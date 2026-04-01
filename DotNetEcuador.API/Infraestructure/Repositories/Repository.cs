@@ -1,5 +1,6 @@
 using DotNetEcuador.API.Infraestructure.Extensions;
 using DotNetEcuador.API.Models.Common;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Linq.Expressions;
 
@@ -49,7 +50,8 @@ public class Repository<T> : IRepository<T>
 
     public async Task<T?> GetByIdAsync(string id)
     {
-        return await _collection.Find(Builders<T>.Filter.Eq("_id", id)).FirstOrDefaultAsync().ConfigureAwait(false);
+        var objectId = ObjectId.Parse(id);
+        return await _collection.Find(Builders<T>.Filter.Eq("_id", objectId)).FirstOrDefaultAsync().ConfigureAwait(false);
     }
 
     public async Task CreateAsync(T entity)
@@ -69,12 +71,14 @@ public class Repository<T> : IRepository<T>
 
     public async Task UpdateAsync(string id, T entity)
     {
-        await _collection.ReplaceOneAsync(Builders<T>.Filter.Eq("_id", id), entity).ConfigureAwait(false);
+        var objectId = ObjectId.Parse(id);
+        await _collection.ReplaceOneAsync(Builders<T>.Filter.Eq("_id", objectId), entity).ConfigureAwait(false);
     }
 
     public async Task DeleteAsync(string id)
     {
-        await _collection.DeleteOneAsync(Builders<T>.Filter.Eq("_id", id)).ConfigureAwait(false);
+        var objectId = ObjectId.Parse(id);
+        await _collection.DeleteOneAsync(Builders<T>.Filter.Eq("_id", objectId)).ConfigureAwait(false);
     }
 
     public async Task<T?> FindAsync(Expression<Func<T, bool>> predicate)

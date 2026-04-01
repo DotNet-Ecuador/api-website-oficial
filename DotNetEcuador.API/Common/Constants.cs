@@ -10,5 +10,10 @@ public static class Constants
         public const string AREAINTEREST = "area_interes";
         public const string COMMUNITYMEMBER = "community_member";
         public const string VOLUNTEERAPPLICATION = "volunteer_applications";
+        public const string EVENTOS = "eventos";
+        public const string ASISTENTES = "asistentes";
+        public const string REGISTROS = "registros";
+        public const string EMAIL_LOG = "emailLog";
+        public const string DATOS_PAGO = "datos_pago";
     }
 }

@@ -19,12 +19,21 @@ public class TokenService : ITokenService
     public TokenService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? 
-                    throw new InvalidOperationException("JWT_SECRET_KEY environment variable is required");
-        _issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "DotNetEcuadorAPI";
-        _audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "DotNetEcuadorClients";
-        _accessTokenExpirationMinutes = int.Parse(Environment.GetEnvironmentVariable("JWT_ACCESS_TOKEN_EXPIRATION") ?? "15");
-        _refreshTokenExpirationDays = int.Parse(Environment.GetEnvironmentVariable("JWT_REFRESH_TOKEN_EXPIRATION") ?? "7");
+        _jwtSecret = configuration["JWT_SECRET_KEY"]
+                    ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
+                    ?? throw new InvalidOperationException("JWT_SECRET_KEY environment variable is required");
+        _issuer = configuration["JWT_ISSUER"]
+                 ?? Environment.GetEnvironmentVariable("JWT_ISSUER")
+                 ?? "DotNetEcuadorAPI";
+        _audience = configuration["JWT_AUDIENCE"]
+                   ?? Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+                   ?? "DotNetEcuadorClients";
+        _accessTokenExpirationMinutes = int.Parse(configuration["JWT_ACCESS_TOKEN_EXPIRATION"]
+                                        ?? Environment.GetEnvironmentVariable("JWT_ACCESS_TOKEN_EXPIRATION")
+                                        ?? "15");
+        _refreshTokenExpirationDays = int.Parse(configuration["JWT_REFRESH_TOKEN_EXPIRATION"]
+                                      ?? Environment.GetEnvironmentVariable("JWT_REFRESH_TOKEN_EXPIRATION")
+                                      ?? "7");
     }
 
     public string GenerateAccessToken(User user)

@@ -52,13 +52,13 @@ public class RepositoryTests
         // Arrange
         var entity = new AreaOfInterest
         {
-            Id = "1",
+            Id = "507f1f77bcf86cd799439011",
             Name = "Updated",
             Description = "Updated Description"
         };
 
         // Act
-        await _repository.UpdateAsync("1", entity).ConfigureAwait(false);
+        await _repository.UpdateAsync("507f1f77bcf86cd799439011", entity).ConfigureAwait(false);
 
         // Assert
         _mockCollection.Verify(
@@ -74,7 +74,7 @@ public class RepositoryTests
     public async Task DeleteAsyncShouldCallDeleteOneAsyncWhenIdIsProvided()
     {
         // Arrange
-        const string entityId = "1";
+        const string entityId = "507f1f77bcf86cd799439011";
 
         // Act
         await _repository.DeleteAsync(entityId).ConfigureAwait(false);

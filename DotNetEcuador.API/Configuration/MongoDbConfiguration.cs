@@ -3,18 +3,20 @@ using DotNetEcuador.API.Infraestructure.Extensions;
 using DotNetEcuador.API.Infraestructure.Repositories;
 using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Models.Auth;
+using DotNetEcuador.API.Models.Eventos;
 using MongoDB.Driver;
 
 namespace DotNetEcuador.API.Configuration;
 
 public static class MongoDbConfiguration
 {
-    public static void ConfigureMongoDB(this IServiceCollection services)
+    public static void ConfigureMongoDB(this IServiceCollection services, IConfiguration configuration)
     {
         try
         {
-            // Get MongoDB connection string from environment variable
-            string mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING")
+            // Get MongoDB connection string from configuration (env vars, user-secrets, appsettings)
+            string mongoConnectionString = configuration["MONGO_CONNECTION_STRING"]
+                ?? Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING")
                 ?? throw new InvalidOperationException(
                     "MONGO_CONNECTION_STRING environment variable is required. " +
                     "For local development, use: mongodb://localhost:27017/dotnet_ecuador");
@@ -61,6 +63,11 @@ public static class MongoDbConfiguration
             services.AddMongoRepository<User>(Constants.MongoCollections.USERS);
             services.AddMongoRepository<AreaOfInterest>(Constants.MongoCollections.AREAINTEREST);
             services.AddMongoRepository<VolunteerApplication>(Constants.MongoCollections.VOLUNTEERAPPLICATION);
+            services.AddMongoRepository<Evento>(Constants.MongoCollections.EVENTOS);
+            services.AddMongoRepository<Asistente>(Constants.MongoCollections.ASISTENTES);
+            services.AddMongoRepository<Registro>(Constants.MongoCollections.REGISTROS);
+            services.AddMongoRepository<EmailLog>(Constants.MongoCollections.EMAIL_LOG);
+            services.AddMongoRepository<DatosPago>(Constants.MongoCollections.DATOS_PAGO);
         }
         catch (Exception ex)
         {

@@ -33,7 +33,7 @@ public class AuthController : BaseApiController
     /// <response code="400">Error de validación o usuario ya existe</response>
     /// <response code="500">Error interno del servidor</response>
     [HttpPost("register")]
-    [AllowAnonymous]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(LoginResponse), 200)]
     [ProducesResponseType(typeof(object), 400)]
     [ProducesResponseType(typeof(object), 500)]

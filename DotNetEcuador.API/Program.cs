@@ -8,13 +8,13 @@ using FluentValidation.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure MongoDB
-builder.Services.ConfigureMongoDB();
+builder.Services.ConfigureMongoDB(builder.Configuration);
 
 // Configure API Versioning
 builder.Services.ConfigureApiVersioning();
 
 // Configure Authentication & Authorization
-builder.Services.ConfigureAuthentication();
+builder.Services.ConfigureAuthentication(builder.Configuration);
 
 // Add services to the container
 builder.Services.AddControllers(options =>
@@ -47,6 +47,26 @@ builder.Services.AddSingleton<IMessageService, MessageService>();
 // Configure Health Checks
 builder.Services.ConfigureHealthChecks();
 
+builder.Services.AddCors(options =>
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        options.AddDefaultPolicy(policy => policy
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+    }
+    else
+    {
+        var allowedOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS")?.Split(',')
+            ?? ["https://dotnetecuador.com"];
+        options.AddDefaultPolicy(policy => policy
+            .WithOrigins(allowedOrigins)
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+    }
+});
+
 var app = builder.Build();
 
 // Configure middleware
@@ -58,6 +78,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerWithVersioning(apiVersionDescriptionProvider);
 }
 
+app.UseCors();
 app.UseHttpsRedirection();
 
 // Configure Health Check endpoints
