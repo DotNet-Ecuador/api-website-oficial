@@ -9,7 +9,7 @@ namespace DotNetEcuador.API.Configuration;
 
 public static class ServicesConfiguration
 {
-    public static void ConfigureApplicationServices(this IServiceCollection services)
+    public static void ConfigureApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
         // Register application services
         services.AddScoped<CommunityService>();
@@ -28,7 +28,8 @@ public static class ServicesConfiguration
         services.AddSingleton<IFileStorageService, FileStorageService>();
 
         // Register Telegram bot
-        var telegramToken = Environment.GetEnvironmentVariable("TELEGRAM_DOTNETECUADOR_BOT_TOKEN");
+        var telegramToken = configuration["TELEGRAM_DOTNETECUADOR_BOT_TOKEN"]
+            ?? Environment.GetEnvironmentVariable("TELEGRAM_DOTNETECUADOR_BOT_TOKEN");
         if (!string.IsNullOrEmpty(telegramToken))
         {
             services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(telegramToken));

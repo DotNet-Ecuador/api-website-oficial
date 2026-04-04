@@ -5,6 +5,7 @@ using DotNetEcuador.API.Infraestructure.Services.Telegram;
 using DotNetEcuador.API.Models.Eventos;
 using DotNetEcuador.API.Models.Eventos.DTOs;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -20,6 +21,7 @@ public class RegistroServiceTests
     private readonly Mock<IRepository<EmailLog>> _mockEmailLogRepo;
     private readonly Mock<IFileStorageService> _mockFileStorage;
     private readonly Mock<ITelegramBotService> _mockTelegramBot;
+    private readonly Mock<IServiceScopeFactory> _mockScopeFactory;
     private readonly Mock<ILogger<RegistroService>> _mockLogger;
     private readonly IRegistroService _service;
 
@@ -33,7 +35,14 @@ public class RegistroServiceTests
         _mockEmailLogRepo = new Mock<IRepository<EmailLog>>();
         _mockFileStorage = new Mock<IFileStorageService>();
         _mockTelegramBot = new Mock<ITelegramBotService>();
+        _mockScopeFactory = new Mock<IServiceScopeFactory>();
         _mockLogger = new Mock<ILogger<RegistroService>>();
+
+        var mockScope = new Mock<IServiceScope>();
+        var mockProvider = new Mock<IServiceProvider>();
+        mockProvider.Setup(p => p.GetService(typeof(IEmailEventoService))).Returns(_mockEmailService.Object);
+        mockScope.Setup(s => s.ServiceProvider).Returns(mockProvider.Object);
+        _mockScopeFactory.Setup(f => f.CreateScope()).Returns(mockScope.Object);
 
         _service = new RegistroService(
             _mockRegistroRepo.Object,
@@ -44,6 +53,7 @@ public class RegistroServiceTests
             _mockEmailLogRepo.Object,
             _mockFileStorage.Object,
             _mockTelegramBot.Object,
+            _mockScopeFactory.Object,
             _mockLogger.Object);
     }
 

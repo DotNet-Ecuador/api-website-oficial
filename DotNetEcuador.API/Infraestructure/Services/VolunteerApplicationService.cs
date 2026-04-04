@@ -40,7 +40,7 @@ namespace DotNetEcuador.API.Infraestructure.Services
                 }
                 
                 // Asignar fecha de creación en hora Ecuador (UTC-5)
-                var ecuadorZone = TimeZoneInfo.FindSystemTimeZoneById("America/Guayaquil");
+                var ecuadorZone = TimeZoneInfo.FindSystemTimeZoneById(Constants.TimeZones.Ecuador);
                 volunteerApplication.CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, ecuadorZone);
                 
                 await _repository.CreateAsync(volunteerApplication);

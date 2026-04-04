@@ -15,13 +15,13 @@ public class EmailEventoService : IEmailEventoService
     {
         _settings = new EmailSettings
         {
-            SmtpHost = Environment.GetEnvironmentVariable("EMAIL_SMTP_HOST") ?? string.Empty,
-            SmtpPort = int.TryParse(Environment.GetEnvironmentVariable("EMAIL_SMTP_PORT"), out var port) ? port : 587,
-            Username = Environment.GetEnvironmentVariable("EMAIL_SMTP_USERNAME") ?? string.Empty,
-            Password = Environment.GetEnvironmentVariable("EMAIL_SMTP_PASSWORD") ?? string.Empty,
-            FromName = Environment.GetEnvironmentVariable("EMAIL_FROM_NAME") ?? "DotNet Ecuador",
-            FromAddress = Environment.GetEnvironmentVariable("EMAIL_FROM_ADDRESS") ?? string.Empty,
-            AdminEmail = Environment.GetEnvironmentVariable("EMAIL_ADMIN_NOTIFICATION") ?? string.Empty
+            SmtpHost = configuration["EMAIL_SMTP_HOST"] ?? Environment.GetEnvironmentVariable("EMAIL_SMTP_HOST") ?? string.Empty,
+            SmtpPort = int.TryParse(configuration["EMAIL_SMTP_PORT"] ?? Environment.GetEnvironmentVariable("EMAIL_SMTP_PORT"), out var port) ? port : 587,
+            Username = configuration["EMAIL_SMTP_USERNAME"] ?? Environment.GetEnvironmentVariable("EMAIL_SMTP_USERNAME") ?? string.Empty,
+            Password = configuration["EMAIL_SMTP_PASSWORD"] ?? Environment.GetEnvironmentVariable("EMAIL_SMTP_PASSWORD") ?? string.Empty,
+            FromName = configuration["EMAIL_FROM_NAME"] ?? Environment.GetEnvironmentVariable("EMAIL_FROM_NAME") ?? "DotNet Ecuador",
+            FromAddress = configuration["EMAIL_FROM_ADDRESS"] ?? Environment.GetEnvironmentVariable("EMAIL_FROM_ADDRESS") ?? string.Empty,
+            AdminEmail = configuration["EMAIL_ADMIN_NOTIFICATION"] ?? Environment.GetEnvironmentVariable("EMAIL_ADMIN_NOTIFICATION") ?? string.Empty
         };
         _templatesPath = Path.Combine(AppContext.BaseDirectory, "Templates", "Email");
     }
@@ -113,7 +113,8 @@ public class EmailEventoService : IEmailEventoService
         }
 
         using var client = new SmtpClient();
-        await client.ConnectAsync(_settings.SmtpHost, _settings.SmtpPort, SecureSocketOptions.StartTls).ConfigureAwait(false);
+        var socketOptions = _settings.SmtpPort == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
+        await client.ConnectAsync(_settings.SmtpHost, _settings.SmtpPort, socketOptions).ConfigureAwait(false);
         await client.AuthenticateAsync(_settings.Username, _settings.Password).ConfigureAwait(false);
         await client.SendAsync(message).ConfigureAwait(false);
         await client.DisconnectAsync(true).ConfigureAwait(false);

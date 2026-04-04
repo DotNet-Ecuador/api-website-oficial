@@ -1,3 +1,4 @@
+using DotNetEcuador.API.Common;
 using DotNetEcuador.API.Infraestructure.Repositories;
 using DotNetEcuador.API.Infraestructure.Services.Telegram;
 using DotNetEcuador.API.Models.Common;
@@ -17,6 +18,7 @@ public class RegistroService : IRegistroService
     private readonly IRepository<EmailLog> _emailLogRepo;
     private readonly IFileStorageService _fileStorage;
     private readonly ITelegramBotService _telegramBot;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<RegistroService> _logger;
     private readonly string _uploadsPath;
 
@@ -31,6 +33,7 @@ public class RegistroService : IRegistroService
         IRepository<EmailLog> emailLogRepo,
         IFileStorageService fileStorage,
         ITelegramBotService telegramBot,
+        IServiceScopeFactory scopeFactory,
         ILogger<RegistroService> logger)
     {
         _registroRepo = registroRepo;
@@ -41,6 +44,7 @@ public class RegistroService : IRegistroService
         _emailLogRepo = emailLogRepo;
         _fileStorage = fileStorage;
         _telegramBot = telegramBot;
+        _scopeFactory = scopeFactory;
         _logger = logger;
         _uploadsPath = Environment.GetEnvironmentVariable("UPLOADS_PATH")
             ?? Path.Combine(AppContext.BaseDirectory, "uploads", "comprobantes");
@@ -77,6 +81,7 @@ public class RegistroService : IRegistroService
         if (registroExistente is not null)
             throw new InvalidOperationException($"El email '{request.Email}' ya está registrado en este evento.");
 
+        var ecuadorZone = TimeZoneInfo.FindSystemTimeZoneById(Constants.TimeZones.Ecuador);
         var registro = new Registro
         {
             EventoId = evento.Id,
@@ -84,7 +89,8 @@ public class RegistroService : IRegistroService
             Estado = EstadoRegistro.Pendiente,
             IdCorto = GenerarIdCorto(),
             TokenQr = Guid.NewGuid().ToString(),
-            SessionToken = Guid.NewGuid().ToString()
+            SessionToken = Guid.NewGuid().ToString(),
+            RegistradoEn = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, ecuadorZone)
         };
         await _registroRepo.CreateAsync(registro).ConfigureAwait(false);
 
@@ -124,31 +130,50 @@ public class RegistroService : IRegistroService
 
         if (asistente is null || evento is null) return;
 
-        _ = NotificarComprobanteAsync(registro, asistente, evento, rutaRelativa);
-
-        await EnviarEmailSeguroAsync(async () =>
-            await _emailService.EnviarConfirmacionPendienteAsync(registro, asistente, evento).ConfigureAwait(false),
-            registroId, TipoEmail.ConfirmacionPendiente, asistente.Email).ConfigureAwait(false);
+        _ = EnviarNotificacionesAsync(registro, asistente, evento, rutaRelativa);
     }
 
-    private async Task NotificarComprobanteAsync(Registro registro, Asistente asistente, Evento evento, string? rutaRelativa)
+    private Task EnviarNotificacionesAsync(Registro registro, Asistente asistente, Evento evento, string? rutaRelativa)
     {
         var rutaFisica = rutaRelativa is not null
             ? Path.Combine(_uploadsPath, rutaRelativa.Replace('/', Path.DirectorySeparatorChar))
             : null;
 
-        try
+        _ = Task.Run(async () =>
         {
-            await _telegramBot.NotificarComprobanteAsync(registro, asistente, evento, rutaRelativa ?? string.Empty).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error enviando notificación Telegram para registro {IdCorto}", registro.IdCorto);
-        }
+            try
+            {
+                await _telegramBot.NotificarComprobanteAsync(registro, asistente, evento, rutaRelativa ?? string.Empty).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error enviando notificación Telegram para registro {IdCorto}", registro.IdCorto);
+            }
 
-        await EnviarEmailSeguroAsync(async () =>
-            await _emailService.NotificarAdminAsync(registro, asistente, evento, rutaFisica).ConfigureAwait(false),
-            registro.Id, TipoEmail.ConfirmacionPendiente, asistente.Email).ConfigureAwait(false);
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var emailService = scope.ServiceProvider.GetRequiredService<IEmailEventoService>();
+                await emailService.EnviarConfirmacionPendienteAsync(registro, asistente, evento).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error enviando email confirmación pendiente a {Email}", asistente.Email);
+            }
+
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var emailService = scope.ServiceProvider.GetRequiredService<IEmailEventoService>();
+                await emailService.NotificarAdminAsync(registro, asistente, evento, rutaFisica).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error enviando email admin para registro {IdCorto}", registro.IdCorto);
+            }
+        });
+
+        return Task.CompletedTask;
     }
 
     public async Task<EventoEstadoDto> GetEstadoAsync(string registroId)
@@ -214,8 +239,9 @@ public class RegistroService : IRegistroService
         var registro = await _registroRepo.GetByIdAsync(registroId).ConfigureAwait(false)
             ?? throw new KeyNotFoundException("Registro no encontrado.");
 
+        var ecuadorZone = TimeZoneInfo.FindSystemTimeZoneById(Constants.TimeZones.Ecuador);
         registro.Estado = EstadoRegistro.Pagado;
-        registro.ConfirmadoEn = DateTime.UtcNow;
+        registro.ConfirmadoEn = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, ecuadorZone);
         registro.NotasAdmin = notasAdmin;
         await _registroRepo.UpdateAsync(registroId, registro).ConfigureAwait(false);
 
