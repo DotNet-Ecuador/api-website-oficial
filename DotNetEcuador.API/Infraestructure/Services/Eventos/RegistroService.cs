@@ -69,7 +69,8 @@ public class RegistroService : IRegistroService
                 Empresa = request.Empresa,
                 Cargo = request.Cargo,
                 Telefono = request.Telefono,
-                AceptaMarketing = request.AceptaMarketing
+                AceptaMarketing = request.AceptaMarketing,
+                CreadoEn = AhoraEcuador()
             };
             await _asistenteRepo.CreateAsync(asistente).ConfigureAwait(false);
         }
@@ -81,7 +82,6 @@ public class RegistroService : IRegistroService
         if (registroExistente is not null)
             throw new InvalidOperationException($"El email '{request.Email}' ya está registrado en este evento.");
 
-        var ecuadorZone = TimeZoneInfo.FindSystemTimeZoneById(Constants.TimeZones.Ecuador);
         var registro = new Registro
         {
             EventoId = evento.Id,
@@ -90,7 +90,7 @@ public class RegistroService : IRegistroService
             IdCorto = GenerarIdCorto(),
             TokenQr = Guid.NewGuid().ToString(),
             SessionToken = Guid.NewGuid().ToString(),
-            RegistradoEn = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, ecuadorZone)
+            RegistradoEn = AhoraEcuador()
         };
         await _registroRepo.CreateAsync(registro).ConfigureAwait(false);
 
@@ -239,9 +239,8 @@ public class RegistroService : IRegistroService
         var registro = await _registroRepo.GetByIdAsync(registroId).ConfigureAwait(false)
             ?? throw new KeyNotFoundException("Registro no encontrado.");
 
-        var ecuadorZone = TimeZoneInfo.FindSystemTimeZoneById(Constants.TimeZones.Ecuador);
         registro.Estado = EstadoRegistro.Pagado;
-        registro.ConfirmadoEn = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, ecuadorZone);
+        registro.ConfirmadoEn = AhoraEcuador();
         registro.NotasAdmin = notasAdmin;
         await _registroRepo.UpdateAsync(registroId, registro).ConfigureAwait(false);
 
@@ -311,6 +310,37 @@ public class RegistroService : IRegistroService
             SessionToken = sessionToken
         };
     }
+
+    public async Task ReenviarEmailAsync(string idCorto)
+    {
+        var registro = await _registroRepo.FindAsync(r => r.IdCorto == idCorto).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException($"No se encontró registro con ID corto '{idCorto}'.");
+
+        var asistente = await _asistenteRepo.GetByIdAsync(registro.AsistenteId).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException("Asistente no encontrado.");
+
+        var eventos = await _eventoService.GetAllAsync().ConfigureAwait(false);
+        var evento = eventos.FirstOrDefault(e => e.Id == registro.EventoId)
+            ?? throw new KeyNotFoundException("Evento no encontrado.");
+
+        using var scope = _scopeFactory.CreateScope();
+        var emailService = scope.ServiceProvider.GetRequiredService<IEmailEventoService>();
+
+        if (registro.Estado == EstadoRegistro.Pagado)
+        {
+            var qrBase64 = _qrService.GenerarQrBase64(registro.TokenQr);
+            await emailService.EnviarConfirmacionPagadaAsync(registro, asistente, evento, qrBase64).ConfigureAwait(false);
+        }
+        else
+        {
+            await emailService.EnviarConfirmacionPendienteAsync(registro, asistente, evento).ConfigureAwait(false);
+        }
+
+        _logger.LogInformation("Email reenviado para registro {IdCorto} ({Estado})", idCorto, registro.Estado);
+    }
+
+    private static DateTime AhoraEcuador()
+        => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(Constants.TimeZones.Ecuador));
 
     private static string GenerarIdCorto()
     {

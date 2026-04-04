@@ -19,12 +19,15 @@ public class TelegramUpdateHandler
     public TelegramUpdateHandler(
         ITelegramBotClient bot,
         IRegistroService registroService,
+        IConfiguration configuration,
         ILogger<TelegramUpdateHandler> logger)
     {
         _bot = bot;
         _registroService = registroService;
         _logger = logger;
-        _adminChatId = long.Parse(Environment.GetEnvironmentVariable("TELEGRAM_ADMIN_CHAT_ID") ?? "0");
+        var chatIdStr = configuration["TELEGRAM_ADMIN_CHAT_ID"]
+            ?? Environment.GetEnvironmentVariable("TELEGRAM_ADMIN_CHAT_ID") ?? "0";
+        _adminChatId = long.Parse(chatIdStr);
     }
 
     public async Task HandleAsync(Update update)
@@ -113,11 +116,47 @@ public class TelegramUpdateHandler
     private async Task HandleMensajeAsync(long chatId, string texto)
     {
         if (chatId != _adminChatId) return;
+
+        if (texto.StartsWith("/reenviar ", StringComparison.OrdinalIgnoreCase))
+        {
+            var idCorto = texto["/reenviar ".Length..].Trim();
+            await ReenviarEmailAsync(chatId, idCorto).ConfigureAwait(false);
+            return;
+        }
+
         if (!Estado.TryGetValue(chatId, out var pendiente)) return;
         if (!pendiente.EsperandoMotivo) return;
 
         Estado.TryRemove(chatId, out _);
         await RechazarAsync(chatId, pendiente, texto).ConfigureAwait(false);
+    }
+
+    private async Task ReenviarEmailAsync(long chatId, string idCorto)
+    {
+        try
+        {
+            await _registroService.ReenviarEmailAsync(idCorto).ConfigureAwait(false);
+            await _bot.SendMessage(
+                chatId: chatId,
+                text: $"✅ Email reenviado para registro `{idCorto}`\\.",
+                parseMode: ParseMode.MarkdownV2).ConfigureAwait(false);
+            _logger.LogInformation("Admin reenvió email para registro {IdCorto} via Telegram", idCorto);
+        }
+        catch (KeyNotFoundException)
+        {
+            await _bot.SendMessage(
+                chatId: chatId,
+                text: $"❌ No se encontró registro con ID `{idCorto}`\\.",
+                parseMode: ParseMode.MarkdownV2).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reenviando email para registro {IdCorto} via Telegram", idCorto);
+            await _bot.SendMessage(
+                chatId: chatId,
+                text: "❌ Error al reenviar el email\\. Revisa los logs\\.",
+                parseMode: ParseMode.MarkdownV2).ConfigureAwait(false);
+        }
     }
 
     private async Task AprobarAsync(long chatId, PendingAction pendiente)

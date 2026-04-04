@@ -13,4 +13,5 @@ public interface IRegistroService
     Task AprobarAsync(string registroId, string notasAdmin);
     Task RechazarAsync(string registroId, string motivo);
     Task<RecuperarRegistroDto> RecuperarRegistroAsync(string email, string eventoSlug);
+    Task ReenviarEmailAsync(string idCorto);
 }

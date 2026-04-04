@@ -45,10 +45,10 @@ public class EmailEventoService : IEmailEventoService
             .Replace("{{nombre}}", asistente.Nombre)
             .Replace("{{evento}}", evento.Nombre)
             .Replace("{{fecha}}", evento.FechaEvento.ToString("dd/MM/yyyy"))
-            .Replace("{{lugar}}", evento.Lugar)
-            .Replace("{{qr_image_base64}}", qrBase64);
+            .Replace("{{lugar}}", evento.Lugar);
 
-        await EnviarAsync(asistente.Email, $"¡Confirmado! Tu entrada para {evento.Nombre}", html).ConfigureAwait(false);
+        var qrBytes = Convert.FromBase64String(qrBase64);
+        await EnviarConQrAsync(asistente.Email, $"¡Confirmado! Tu entrada para {evento.Nombre}", html, qrBytes).ConfigureAwait(false);
     }
 
     public async Task EnviarRechazoAsync(Registro registro, Asistente asistente, Evento evento, string motivo)
@@ -82,6 +82,35 @@ public class EmailEventoService : IEmailEventoService
 
     private Task EnviarAsync(string destinatario, string asunto, string htmlBody)
         => EnviarConAdjuntoAsync(destinatario, asunto, htmlBody, null);
+
+    private async Task EnviarConQrAsync(string destinatario, string asunto, string htmlBody, byte[] qrBytes)
+    {
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(_settings.FromName, _settings.FromAddress));
+        message.To.Add(MailboxAddress.Parse(destinatario));
+        message.Subject = asunto;
+
+        var htmlPart = new TextPart("html") { Text = htmlBody };
+
+        var qrPart = new MimePart("image", "png")
+        {
+            Content = new MimeContent(new MemoryStream(qrBytes)),
+            ContentId = "qr-code",
+            ContentDisposition = new ContentDisposition(ContentDisposition.Inline),
+            ContentTransferEncoding = ContentEncoding.Base64,
+            FileName = "qr.png"
+        };
+
+        var related = new MultipartRelated { htmlPart, qrPart };
+        message.Body = related;
+
+        using var client = new SmtpClient();
+        var socketOptions = _settings.SmtpPort == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
+        await client.ConnectAsync(_settings.SmtpHost, _settings.SmtpPort, socketOptions).ConfigureAwait(false);
+        await client.AuthenticateAsync(_settings.Username, _settings.Password).ConfigureAwait(false);
+        await client.SendAsync(message).ConfigureAwait(false);
+        await client.DisconnectAsync(true).ConfigureAwait(false);
+    }
 
     private async Task EnviarConAdjuntoAsync(string destinatario, string asunto, string htmlBody, string? rutaAdjunto)
     {

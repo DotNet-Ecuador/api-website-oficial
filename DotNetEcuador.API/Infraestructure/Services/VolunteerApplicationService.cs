@@ -2,6 +2,7 @@ using DotNetEcuador.API.Common;
 using DotNetEcuador.API.Exceptions;
 using DotNetEcuador.API.Infraestructure.Extensions;
 using DotNetEcuador.API.Infraestructure.Repositories;
+using DotNetEcuador.API.Infraestructure.Services.Telegram;
 using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Models.Common;
 using MongoDB.Driver;
@@ -14,13 +15,15 @@ namespace DotNetEcuador.API.Infraestructure.Services
         private readonly IMongoCollection<VolunteerApplication> _collection;
         private readonly ILogger<VolunteerApplicationService> _logger;
         private readonly IEmailNotificationService _emailNotification;
+        private readonly ITelegramBotService _telegramBot;
 
-        public VolunteerApplicationService(IRepository<VolunteerApplication> repository, IMongoDatabase database, ILogger<VolunteerApplicationService> logger, IEmailNotificationService emailNotification)
+        public VolunteerApplicationService(IRepository<VolunteerApplication> repository, IMongoDatabase database, ILogger<VolunteerApplicationService> logger, IEmailNotificationService emailNotification, ITelegramBotService telegramBot)
         {
             _repository = repository;
             _collection = database.GetCollection<VolunteerApplication>(Constants.MongoCollections.VOLUNTEERAPPLICATION);
             _logger = logger;
             _emailNotification = emailNotification;
+            _telegramBot = telegramBot;
         }
 
         public async Task CreateAsync(VolunteerApplication volunteerApplication)
@@ -118,7 +121,16 @@ namespace DotNetEcuador.API.Infraestructure.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error enviando notificación de nuevo voluntario para {Email}", app.Email);
+                _logger.LogError(ex, "Error enviando notificación email de nuevo voluntario para {Email}", app.Email);
+            }
+
+            try
+            {
+                await _telegramBot.NotificarNuevoVoluntarioAsync(app).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error enviando notificación Telegram de nuevo voluntario para {Email}", app.Email);
             }
         }
     }

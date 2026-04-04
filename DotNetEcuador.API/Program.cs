@@ -1,4 +1,5 @@
 using DotNetEcuador.API.Configuration;
+using Serilog;
 using DotNetEcuador.API.Services;
 using DotNetEcuador.API.Middleware;
 using DotNetEcuador.API.Filters;
@@ -7,19 +8,14 @@ using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure MongoDB
+builder.ConfigureSerilog();
+
 builder.Services.ConfigureMongoDB(builder.Configuration);
-
-// Configure API Versioning
 builder.Services.ConfigureApiVersioning();
-
-// Configure Authentication & Authorization
 builder.Services.ConfigureAuthentication(builder.Configuration);
 
-// Add services to the container
 builder.Services.AddControllers(options =>
 {
-    // Add global validation filter
     options.Filters.Add<ValidationActionFilter>();
 })
 .AddNewtonsoftJson(options =>
@@ -27,24 +23,17 @@ builder.Services.AddControllers(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
 });
 
-// Configure FluentValidation
 builder.Services.AddFluentValidationAutoValidation()
     .AddFluentValidationClientsideAdapters()
     .AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddEndpointsApiExplorer();
 
-// Configure Swagger with versioning and JWT
 builder.Services.ConfigureSwagger();
 builder.Services.ConfigureOptions<DotNetEcuador.API.Configuration.ConfigureSwaggerOptions>();
 
-// Configure Application Services
-builder.Services.ConfigureApplicationServices();
-
-// Configure Message Service (Singleton for minimal memory usage)
+builder.Services.ConfigureApplicationServices(builder.Configuration);
 builder.Services.AddSingleton<IMessageService, MessageService>();
-
-// Configure Health Checks
 builder.Services.ConfigureHealthChecks();
 
 builder.Services.AddCors(options =>
@@ -69,8 +58,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure middleware
 app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseSerilogRequestLogging();
 
 if (app.Environment.IsDevelopment())
 {
@@ -80,11 +69,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 app.UseHttpsRedirection();
-
-// Configure Health Check endpoints
 app.UseHealthCheckEndpoints();
-
-// Add authentication middleware
 app.UseAuthentication();
 app.UseAuthorization();
 

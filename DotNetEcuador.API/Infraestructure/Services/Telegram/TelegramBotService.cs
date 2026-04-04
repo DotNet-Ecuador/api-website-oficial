@@ -1,3 +1,4 @@
+using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Models.Eventos;
 using global::Telegram.Bot;
 using global::Telegram.Bot.Types;
@@ -12,11 +13,14 @@ public class TelegramBotService : ITelegramBotService
     private readonly long _adminChatId;
     private readonly string _uploadsPath;
 
-    public TelegramBotService(ITelegramBotClient bot)
+    public TelegramBotService(ITelegramBotClient bot, IConfiguration configuration)
     {
         _bot = bot;
-        _adminChatId = long.Parse(Environment.GetEnvironmentVariable("TELEGRAM_ADMIN_CHAT_ID") ?? "0");
-        _uploadsPath = Environment.GetEnvironmentVariable("UPLOADS_PATH")
+        var chatIdStr = configuration["TELEGRAM_ADMIN_CHAT_ID"]
+            ?? Environment.GetEnvironmentVariable("TELEGRAM_ADMIN_CHAT_ID") ?? "0";
+        _adminChatId = long.Parse(chatIdStr);
+        _uploadsPath = configuration["UPLOADS_PATH"]
+            ?? Environment.GetEnvironmentVariable("UPLOADS_PATH")
             ?? Path.Combine(AppContext.BaseDirectory, "uploads", "comprobantes");
     }
 
@@ -74,6 +78,27 @@ public class TelegramBotService : ITelegramBotService
                 parseMode: ParseMode.Markdown,
                 replyMarkup: teclado).ConfigureAwait(false);
         }
+    }
+
+    public async Task NotificarNuevoVoluntarioAsync(VolunteerApplication app)
+    {
+        if (_adminChatId == 0) return;
+
+        var areas = app.AreasOfInterest?.Count > 0
+            ? string.Join(", ", app.AreasOfInterest)
+            : "No especificadas";
+
+        var texto = $"🙋 *Nuevo voluntario registrado*\n\n" +
+                    $"*Nombre:* {EscaparMarkdown(app.FullName)}\n" +
+                    $"*Email:* {EscaparMarkdown(app.Email)}\n" +
+                    $"*Teléfono:* {EscaparMarkdown(app.PhoneNumber)}\n" +
+                    $"*Ciudad:* {EscaparMarkdown(app.City)}\n" +
+                    $"*Áreas:* {EscaparMarkdown(areas)}";
+
+        await _bot.SendMessage(
+            chatId: _adminChatId,
+            text: texto,
+            parseMode: ParseMode.Markdown).ConfigureAwait(false);
     }
 
     private static string EscaparMarkdown(string texto) =>
