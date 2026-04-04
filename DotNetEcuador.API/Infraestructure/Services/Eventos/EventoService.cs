@@ -28,7 +28,10 @@ public class EventoService : IEventoService
     }
 
     public async Task<List<Evento>> GetAllAsync()
-        => await _eventoRepo.GetAllAsync().ConfigureAwait(false);
+    {
+        var eventos = await _eventoRepo.GetAllAsync().ConfigureAwait(false);
+        return eventos.OrderBy(e => e.FechaEvento).ToList();
+    }
 
     public async Task CreateAsync(Evento evento)
         => await _eventoRepo.CreateAsync(evento).ConfigureAwait(false);
