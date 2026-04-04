@@ -3,6 +3,7 @@ using DotNetEcuador.API.Models.Common;
 using DotNetEcuador.API.Infraestructure.Services;
 using DotNetEcuador.API.Infraestructure.Repositories;
 using DotNetEcuador.API.Exceptions;
+using DotNetEcuador.API.Infraestructure.Services.Telegram;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -16,6 +17,8 @@ public class VolunteerApplicationServiceTests
     private readonly Mock<IMongoDatabase> _mockDatabase;
     private readonly Mock<IMongoCollection<VolunteerApplication>> _mockCollection;
     private readonly Mock<ILogger<VolunteerApplicationService>> _mockLogger;
+    private readonly Mock<IEmailNotificationService> _mockEmailNotification;
+    private readonly Mock<ITelegramBotService> _mockTelegramBot;
     private readonly IVolunteerApplicationService _service;
 
     public VolunteerApplicationServiceTests()
@@ -24,12 +27,22 @@ public class VolunteerApplicationServiceTests
         _mockDatabase = new Mock<IMongoDatabase>();
         _mockCollection = new Mock<IMongoCollection<VolunteerApplication>>();
         _mockLogger = new Mock<ILogger<VolunteerApplicationService>>();
+        _mockEmailNotification = new Mock<IEmailNotificationService>();
+        _mockTelegramBot = new Mock<ITelegramBotService>();
 
         _mockDatabase
             .Setup(db => db.GetCollection<VolunteerApplication>("volunteer_applications", null))
             .Returns(_mockCollection.Object);
 
-        _service = new VolunteerApplicationService(_mockRepository.Object, _mockDatabase.Object, _mockLogger.Object);
+        _mockEmailNotification
+            .Setup(e => e.NotificarAdminAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        _mockTelegramBot
+            .Setup(t => t.NotificarNuevoVoluntarioAsync(It.IsAny<VolunteerApplication>()))
+            .Returns(Task.CompletedTask);
+
+        _service = new VolunteerApplicationService(_mockRepository.Object, _mockDatabase.Object, _mockLogger.Object, _mockEmailNotification.Object, _mockTelegramBot.Object);
     }
 
     [Fact]

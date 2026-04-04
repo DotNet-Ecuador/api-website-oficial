@@ -7,13 +7,18 @@ namespace DotNetEcuador.API.Configuration;
 
 public static class AuthConfiguration
 {
-    public static void ConfigureAuthentication(this IServiceCollection services)
+    public static void ConfigureAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        // Get JWT settings from environment variables
-        var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? 
-                       throw new InvalidOperationException("JWT_SECRET_KEY environment variable is required");
-        var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "DotNetEcuadorAPI";
-        var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "DotNetEcuadorClients";
+        // Get JWT settings from configuration (user-secrets, env vars, appsettings)
+        var jwtSecret = configuration["JWT_SECRET_KEY"]
+                       ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
+                       ?? throw new InvalidOperationException("JWT_SECRET_KEY environment variable is required");
+        var jwtIssuer = configuration["JWT_ISSUER"]
+                       ?? Environment.GetEnvironmentVariable("JWT_ISSUER")
+                       ?? "DotNetEcuadorAPI";
+        var jwtAudience = configuration["JWT_AUDIENCE"]
+                         ?? Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+                         ?? "DotNetEcuadorClients";
 
         // Configure JWT authentication
         services.AddAuthentication(options =>
