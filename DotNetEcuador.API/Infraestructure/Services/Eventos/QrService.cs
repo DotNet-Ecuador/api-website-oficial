@@ -12,7 +12,7 @@ public class QrService : IQrService
         using var qrCode = new PngByteQRCode(qrData);
         return qrCode.GetGraphic(
             pixelsPerModule: 10,
-            darkColorRgba: [123, 47, 190, 255],
+            darkColorRgba: [0, 0, 0, 255],
             lightColorRgba: [255, 255, 255, 255]);
     }
 
