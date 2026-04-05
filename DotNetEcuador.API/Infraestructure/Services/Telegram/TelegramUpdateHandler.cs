@@ -54,16 +54,15 @@ public class TelegramUpdateHandler
 
         var data = callback.Data ?? string.Empty;
 
-        // action:aprobar:{registroId}:{idCorto}:{nombre}
+        // action:aprobar:{registroId}:{idCorto}
         if (data.StartsWith("action:"))
         {
-            var partes = data.Split(':', 5);
-            if (partes.Length < 5) return;
+            var partes = data.Split(':', 4);
+            if (partes.Length < 4) return;
 
             var accion = partes[1] == "aprobar" ? TelegramAccion.Aprobar : TelegramAccion.Rechazar;
             var registroId = partes[2];
             var idCorto = partes[3];
-            var nombre = partes[4];
             var accionTexto = accion == TelegramAccion.Aprobar ? "aprobar" : "rechazar";
 
             Estado[chatId] = new PendingAction
@@ -71,7 +70,7 @@ public class TelegramUpdateHandler
                 Accion = accion,
                 RegistroId = registroId,
                 IdCorto = idCorto,
-                NombreAsistente = nombre
+                NombreAsistente = string.Empty
             };
 
             var teclado = new InlineKeyboardMarkup(new[]
@@ -85,7 +84,7 @@ public class TelegramUpdateHandler
 
             await _bot.SendMessage(
                 chatId: chatId,
-                text: $"¿Estás seguro de *{accionTexto}* el registro `{idCorto}` de *{nombre}*?",
+                text: $"¿Estás seguro de *{accionTexto}* el registro `{idCorto}`?",
                 parseMode: ParseMode.Markdown,
                 replyMarkup: teclado).ConfigureAwait(false);
         }
