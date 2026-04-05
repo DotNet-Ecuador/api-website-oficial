@@ -20,4 +20,5 @@ public class EventoPublicoDto
     public string CoverImage { get; set; } = string.Empty;
     public string? HostedBy { get; set; }
     public string? PartnerEvento { get; set; }
+    public string? RegistroUrl { get; set; }
 }

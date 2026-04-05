@@ -63,6 +63,9 @@ public class Evento
     [BsonElement("partnerEvento")]
     public string? PartnerEvento { get; set; }
 
+    [BsonElement("registroUrl")]
+    public string? RegistroUrl { get; set; }
+
     [BsonElement("datosTransferencia")]
     public DatosTransferencia DatosTransferencia { get; set; } = new();
 

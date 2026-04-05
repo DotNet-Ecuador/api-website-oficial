@@ -68,7 +68,8 @@ public class EventosController : BaseApiController
             dto.Speakers,
             dto.CoverImage,
             dto.HostedBy,
-            dto.PartnerEvento
+            dto.PartnerEvento,
+            dto.RegistroUrl
         });
     }
 
@@ -91,6 +92,7 @@ public class EventosController : BaseApiController
         Speakers = e.Speakers,
         CoverImage = e.CoverImage,
         HostedBy = e.HostedBy,
-        PartnerEvento = e.PartnerEvento
+        PartnerEvento = e.PartnerEvento,
+        RegistroUrl = e.RegistroUrl
     };
 }
