@@ -39,8 +39,8 @@ public class TelegramBotService : ITelegramBotService
         {
             new[]
             {
-                InlineKeyboardButton.WithCallbackData("✅ Aprobar", $"action:aprobar:{registro.Id}:{registro.IdCorto}:{asistente.Nombre}"),
-                InlineKeyboardButton.WithCallbackData("❌ Rechazar", $"action:rechazar:{registro.Id}:{registro.IdCorto}:{asistente.Nombre}")
+                InlineKeyboardButton.WithCallbackData("✅ Aprobar", $"action:aprobar:{registro.Id}:{registro.IdCorto}"),
+                InlineKeyboardButton.WithCallbackData("❌ Rechazar", $"action:rechazar:{registro.Id}:{registro.IdCorto}")
             }
         });
 
