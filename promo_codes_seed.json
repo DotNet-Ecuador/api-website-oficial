@@ -1,0 +1,20 @@
+[
+  {
+    "code": "TEST01",
+    "description": "TEST DATA - Código de prueba sin límite de usos",
+    "isActive": true,
+    "maxUses": null,
+    "currentUses": 0,
+    "expiresAt": null,
+    "createdAt": { "$date": "2026-01-01T00:00:00Z" }
+  },
+  {
+    "code": "FREE99",
+    "description": "TEST DATA - Código de prueba con límite de 99 usos",
+    "isActive": true,
+    "maxUses": 99,
+    "currentUses": 0,
+    "expiresAt": null,
+    "createdAt": { "$date": "2026-01-01T00:00:00Z" }
+  }
+]

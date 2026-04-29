@@ -68,6 +68,7 @@ public static class MongoDbConfiguration
             services.AddMongoRepository<Registro>(Constants.MongoCollections.REGISTROS);
             services.AddMongoRepository<EmailLog>(Constants.MongoCollections.EMAIL_LOG);
             services.AddMongoRepository<DatosPago>(Constants.MongoCollections.DATOS_PAGO);
+            services.AddMongoRepository<PromoCode>(Constants.MongoCollections.PROMO_CODES);
         }
         catch (Exception ex)
         {
