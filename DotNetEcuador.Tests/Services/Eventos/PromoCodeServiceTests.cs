@@ -163,4 +163,55 @@ public class PromoCodeServiceTests
         _mockRepo.Verify(
             r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<PromoCode, bool>>>()), Times.Once);
     }
+
+    // IncrementUsesAsync
+
+    [Fact]
+    public async Task IncrementUsesAsync_CuandoCodigoNoExiste_NoLanzaExcepcion()
+    {
+        SetupRepo(null);
+
+        await _service.IncrementUsesAsync("NOEXST");
+    }
+
+    [Fact]
+    public async Task IncrementUsesAsync_CuandoCodigoExiste_IncrementaCurrentUses()
+    {
+        var promoCode = CodigoActivo(currentUses: 3);
+        SetupRepo(promoCode);
+        _mockRepo.Setup(r => r.UpdateAsync(promoCode.Id, It.IsAny<PromoCode>())).Returns(Task.CompletedTask);
+
+        await _service.IncrementUsesAsync("TEST01");
+
+        _mockRepo.Verify(
+            r => r.UpdateAsync(promoCode.Id, It.Is<PromoCode>(p => p.CurrentUses == 4)),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task IncrementUsesAsync_CuandoCodigoExiste_LlamaUpdateAsync()
+    {
+        var promoCode = CodigoActivo();
+        SetupRepo(promoCode);
+        _mockRepo.Setup(r => r.UpdateAsync(It.IsAny<string>(), It.IsAny<PromoCode>())).Returns(Task.CompletedTask);
+
+        await _service.IncrementUsesAsync("TEST01");
+
+        _mockRepo.Verify(
+            r => r.UpdateAsync(promoCode.Id, It.IsAny<PromoCode>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task IncrementUsesAsync_NormalizaCodigoAMayusculas()
+    {
+        var promoCode = CodigoActivo();
+        SetupRepo(promoCode);
+        _mockRepo.Setup(r => r.UpdateAsync(It.IsAny<string>(), It.IsAny<PromoCode>())).Returns(Task.CompletedTask);
+
+        await _service.IncrementUsesAsync("test01");
+
+        _mockRepo.Verify(
+            r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<PromoCode, bool>>>()), Times.Once);
+    }
 }

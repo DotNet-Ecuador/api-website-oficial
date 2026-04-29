@@ -80,6 +80,23 @@ public class TelegramBotService : ITelegramBotService
         }
     }
 
+    public async Task NotificarPromoAplicadoAsync(Registro registro, Asistente asistente, Evento evento)
+    {
+        if (_adminChatId == 0) return;
+
+        var texto = $"🎟️ *Registro con código promo*\n\n" +
+                    $"*Evento:* {EscaparMarkdown(evento.Nombre)}\n" +
+                    $"*Asistente:* {EscaparMarkdown(asistente.Nombre)}\n" +
+                    $"*Email:* {EscaparMarkdown(asistente.Email)}\n" +
+                    $"*ID Corto:* `{registro.IdCorto}`\n" +
+                    $"*Estado:* Aprobado automáticamente";
+
+        await _bot.SendMessage(
+            chatId: _adminChatId,
+            text: texto,
+            parseMode: ParseMode.Markdown).ConfigureAwait(false);
+    }
+
     public async Task NotificarNuevoVoluntarioAsync(VolunteerApplication app)
     {
         if (_adminChatId == 0) return;

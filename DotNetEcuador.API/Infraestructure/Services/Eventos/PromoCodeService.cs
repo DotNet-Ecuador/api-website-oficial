@@ -43,6 +43,22 @@ public class PromoCodeService : IPromoCodeService
         };
     }
 
+    public async Task IncrementUsesAsync(string code)
+    {
+        var upperCode = code.ToUpperInvariant();
+
+        var promoCode = await _promoCodeRepository.FindAsync(p =>
+            p.Code == upperCode &&
+            p.IsActive).ConfigureAwait(false);
+
+        if (promoCode is null) return;
+
+        promoCode.CurrentUses++;
+        await _promoCodeRepository.UpdateAsync(promoCode.Id, promoCode).ConfigureAwait(false);
+
+        _logger.LogInformation("Promo code {Code} uses incremented to {Count}", upperCode, promoCode.CurrentUses);
+    }
+
     private static PromoCodeValidateResponseDto Invalid() =>
         new() { Valid = false, Message = "Código no válido o expirado." };
 }

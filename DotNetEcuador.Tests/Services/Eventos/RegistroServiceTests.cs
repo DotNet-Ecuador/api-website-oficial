@@ -21,6 +21,7 @@ public class RegistroServiceTests
     private readonly Mock<IRepository<EmailLog>> _mockEmailLogRepo;
     private readonly Mock<IFileStorageService> _mockFileStorage;
     private readonly Mock<ITelegramBotService> _mockTelegramBot;
+    private readonly Mock<IPromoCodeService> _mockPromoCodeService;
     private readonly Mock<IServiceScopeFactory> _mockScopeFactory;
     private readonly Mock<ILogger<RegistroService>> _mockLogger;
     private readonly IRegistroService _service;
@@ -35,6 +36,7 @@ public class RegistroServiceTests
         _mockEmailLogRepo = new Mock<IRepository<EmailLog>>();
         _mockFileStorage = new Mock<IFileStorageService>();
         _mockTelegramBot = new Mock<ITelegramBotService>();
+        _mockPromoCodeService = new Mock<IPromoCodeService>();
         _mockScopeFactory = new Mock<IServiceScopeFactory>();
         _mockLogger = new Mock<ILogger<RegistroService>>();
 
@@ -53,6 +55,7 @@ public class RegistroServiceTests
             _mockEmailLogRepo.Object,
             _mockFileStorage.Object,
             _mockTelegramBot.Object,
+            _mockPromoCodeService.Object,
             _mockScopeFactory.Object,
             _mockLogger.Object);
     }
@@ -183,6 +186,152 @@ public class RegistroServiceTests
         _mockEventoService.Setup(s => s.GetAllAsync()).ReturnsAsync(new List<Evento>());
 
         await _service.SubirComprobanteAsync(registroId, "token-valido", new ComprobanteRequestDto());
+    }
+
+    [Fact]
+    public async Task AplicarPromo_CuandoRegistroNoExiste_LanzaKeyNotFoundException()
+    {
+        _mockRegistroRepo.Setup(r => r.GetByIdAsync("no-existe")).ReturnsAsync((Registro?)null);
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _service.AplicarPromoAsync("no-existe", "any-token", "TEST01"));
+    }
+
+    [Fact]
+    public async Task AplicarPromo_CuandoSessionTokenInvalido_LanzaUnauthorizedAccessException()
+    {
+        var registro = new Registro
+        {
+            Id = "507f1f77bcf86cd799439011",
+            SessionToken = "token-valido",
+            Estado = EstadoRegistro.Pendiente
+        };
+        _mockRegistroRepo.Setup(r => r.GetByIdAsync("507f1f77bcf86cd799439011")).ReturnsAsync(registro);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _service.AplicarPromoAsync("507f1f77bcf86cd799439011", "token-incorrecto", "TEST01"));
+    }
+
+    [Fact]
+    public async Task AplicarPromo_CuandoValido_SetaEstadoPagado()
+    {
+        var registroId = "507f1f77bcf86cd799439011";
+        var registro = new Registro
+        {
+            Id = registroId,
+            AsistenteId = "507f1f77bcf86cd799439012",
+            EventoId = "507f1f77bcf86cd799439013",
+            SessionToken = "token-valido",
+            TokenQr = "qr-token",
+            Estado = EstadoRegistro.Pendiente,
+            IdCorto = "TEST01"
+        };
+        Registro? registroActualizado = null;
+        _mockRegistroRepo.Setup(r => r.GetByIdAsync(registroId)).ReturnsAsync(registro);
+        _mockRegistroRepo.Setup(r => r.UpdateAsync(registroId, It.IsAny<Registro>()))
+            .Callback<string, Registro>((_, r) => registroActualizado = r)
+            .Returns(Task.CompletedTask);
+        _mockAsistenteRepo.Setup(r => r.GetByIdAsync(registro.AsistenteId)).ReturnsAsync((Asistente?)null);
+
+        await _service.AplicarPromoAsync(registroId, "token-valido", "TEST01");
+
+        registroActualizado!.Estado.Should().Be(EstadoRegistro.Pagado);
+        registroActualizado.ConfirmadoEn.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task AplicarPromo_CuandoValido_IncrementaUsosDelCodigo()
+    {
+        var registroId = "507f1f77bcf86cd799439011";
+        var registro = new Registro
+        {
+            Id = registroId,
+            AsistenteId = "507f1f77bcf86cd799439012",
+            SessionToken = "token-valido",
+            Estado = EstadoRegistro.Pendiente
+        };
+        _mockRegistroRepo.Setup(r => r.GetByIdAsync(registroId)).ReturnsAsync(registro);
+        _mockRegistroRepo.Setup(r => r.UpdateAsync(registroId, It.IsAny<Registro>())).Returns(Task.CompletedTask);
+        _mockAsistenteRepo.Setup(r => r.GetByIdAsync(registro.AsistenteId)).ReturnsAsync((Asistente?)null);
+
+        await _service.AplicarPromoAsync(registroId, "token-valido", "TEST01");
+
+        _mockPromoCodeService.Verify(s => s.IncrementUsesAsync("TEST01"), Times.Once);
+    }
+
+    [Fact]
+    public async Task AplicarPromo_CuandoAsistenoNoExiste_RetornaSinError()
+    {
+        var registroId = "507f1f77bcf86cd799439011";
+        var registro = new Registro
+        {
+            Id = registroId,
+            AsistenteId = "507f1f77bcf86cd799439012",
+            SessionToken = "token-valido",
+            Estado = EstadoRegistro.Pendiente
+        };
+        _mockRegistroRepo.Setup(r => r.GetByIdAsync(registroId)).ReturnsAsync(registro);
+        _mockRegistroRepo.Setup(r => r.UpdateAsync(registroId, It.IsAny<Registro>())).Returns(Task.CompletedTask);
+        _mockAsistenteRepo.Setup(r => r.GetByIdAsync(registro.AsistenteId)).ReturnsAsync((Asistente?)null);
+
+        await _service.AplicarPromoAsync(registroId, "token-valido", "TEST01");
+    }
+
+    [Fact]
+    public async Task AplicarPromo_CuandoEventoNoExiste_RetornaSinError()
+    {
+        var registroId = "507f1f77bcf86cd799439011";
+        var registro = new Registro
+        {
+            Id = registroId,
+            AsistenteId = "507f1f77bcf86cd799439012",
+            EventoId = "507f1f77bcf86cd799439013",
+            SessionToken = "token-valido",
+            Estado = EstadoRegistro.Pendiente
+        };
+        var asistente = new Asistente { Id = "507f1f77bcf86cd799439012", Email = "juan@test.com", Nombre = "Juan" };
+        _mockRegistroRepo.Setup(r => r.GetByIdAsync(registroId)).ReturnsAsync(registro);
+        _mockRegistroRepo.Setup(r => r.UpdateAsync(registroId, It.IsAny<Registro>())).Returns(Task.CompletedTask);
+        _mockAsistenteRepo.Setup(r => r.GetByIdAsync(registro.AsistenteId)).ReturnsAsync(asistente);
+        _mockEventoService.Setup(s => s.GetAllAsync()).ReturnsAsync(new List<Evento>());
+
+        await _service.AplicarPromoAsync(registroId, "token-valido", "TEST01");
+    }
+
+    [Fact]
+    public async Task AplicarPromo_CuandoValido_EnviaEmailQrAlAsistente()
+    {
+        var registroId = "507f1f77bcf86cd799439011";
+        var registro = new Registro
+        {
+            Id = registroId,
+            AsistenteId = "507f1f77bcf86cd799439012",
+            EventoId = "507f1f77bcf86cd799439013",
+            SessionToken = "token-valido",
+            TokenQr = "qr-token",
+            Estado = EstadoRegistro.Pendiente,
+            IdCorto = "TEST01"
+        };
+        var asistente = new Asistente { Id = "507f1f77bcf86cd799439012", Email = "juan@test.com", Nombre = "Juan" };
+        var evento = EventoConCupo();
+        evento.Id = "507f1f77bcf86cd799439013";
+
+        _mockRegistroRepo.Setup(r => r.GetByIdAsync(registroId)).ReturnsAsync(registro);
+        _mockRegistroRepo.Setup(r => r.UpdateAsync(registroId, It.IsAny<Registro>())).Returns(Task.CompletedTask);
+        _mockAsistenteRepo.Setup(r => r.GetByIdAsync(registro.AsistenteId)).ReturnsAsync(asistente);
+        _mockEventoService.Setup(s => s.GetAllAsync()).ReturnsAsync(new List<Evento> { evento });
+        _mockQrService.Setup(s => s.GenerarQrBase64(It.IsAny<string>())).Returns("qr-base64");
+        _mockEmailService
+            .Setup(s => s.EnviarConfirmacionPagadaAsync(
+                It.IsAny<Registro>(), It.IsAny<Asistente>(), It.IsAny<Evento>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        await _service.AplicarPromoAsync(registroId, "token-valido", "TEST01");
+
+        _mockEmailService.Verify(
+            s => s.EnviarConfirmacionPagadaAsync(
+                It.IsAny<Registro>(), It.IsAny<Asistente>(), It.IsAny<Evento>(), "qr-base64"),
+            Times.Once);
     }
 
     [Fact]
