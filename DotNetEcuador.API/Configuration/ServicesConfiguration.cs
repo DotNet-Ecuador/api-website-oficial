@@ -48,5 +48,6 @@ public static class ServicesConfiguration
         services.AddScoped<IQrService, QrService>();
         services.AddScoped<IEmailEventoService, EmailEventoService>();
         services.AddScoped<IExportService, ExportService>();
+        services.AddScoped<IPromoCodeService, PromoCodeService>();
     }
 }

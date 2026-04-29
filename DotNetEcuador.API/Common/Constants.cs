@@ -20,5 +20,6 @@ public static class Constants
         public const string REGISTROS = "inscripciones_eventos";
         public const string EMAIL_LOG = "emailLog";
         public const string DATOS_PAGO = "datos_pago";
+        public const string PROMO_CODES = "promo_codes";
     }
 }
