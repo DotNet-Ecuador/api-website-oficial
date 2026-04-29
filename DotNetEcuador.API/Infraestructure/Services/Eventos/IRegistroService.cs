@@ -8,6 +8,7 @@ public interface IRegistroService
 {
     Task<RegistroResponseDto> CrearRegistroAsync(RegistroRequestDto request);
     Task SubirComprobanteAsync(string registroId, string sessionToken, ComprobanteRequestDto dto);
+    Task AplicarPromoAsync(string registroId, string sessionToken, string promoCode);
     Task<EventoEstadoDto> GetEstadoAsync(string registroId);
     Task<PagedResponse<AdminRegistroDto>> GetAdminRegistrosAsync(PagedRequest request, string? eventoId, string? estado);
     Task AprobarAsync(string registroId, string notasAdmin);

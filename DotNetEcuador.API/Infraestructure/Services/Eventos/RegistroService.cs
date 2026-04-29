@@ -18,6 +18,7 @@ public class RegistroService : IRegistroService
     private readonly IRepository<EmailLog> _emailLogRepo;
     private readonly IFileStorageService _fileStorage;
     private readonly ITelegramBotService _telegramBot;
+    private readonly IPromoCodeService _promoCodeService;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<RegistroService> _logger;
     private readonly string _uploadsPath;
@@ -33,6 +34,7 @@ public class RegistroService : IRegistroService
         IRepository<EmailLog> emailLogRepo,
         IFileStorageService fileStorage,
         ITelegramBotService telegramBot,
+        IPromoCodeService promoCodeService,
         IServiceScopeFactory scopeFactory,
         ILogger<RegistroService> logger)
     {
@@ -44,6 +46,7 @@ public class RegistroService : IRegistroService
         _emailLogRepo = emailLogRepo;
         _fileStorage = fileStorage;
         _telegramBot = telegramBot;
+        _promoCodeService = promoCodeService;
         _scopeFactory = scopeFactory;
         _logger = logger;
         _uploadsPath = Environment.GetEnvironmentVariable("UPLOADS_PATH")
@@ -258,6 +261,55 @@ public class RegistroService : IRegistroService
             registroId, TipoEmail.ConfirmacionPagada, asistente.Email).ConfigureAwait(false);
 
         _logger.LogInformation("Registro {IdCorto} aprobado para {Email}", registro.IdCorto, asistente.Email);
+    }
+
+    public async Task AplicarPromoAsync(string registroId, string sessionToken, string promoCode)
+    {
+        var registro = await _registroRepo.GetByIdAsync(registroId).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException("Registro no encontrado.");
+
+        if (registro.SessionToken != sessionToken)
+            throw new UnauthorizedAccessException("Session token inválido.");
+
+        registro.Estado = EstadoRegistro.Pagado;
+        registro.ConfirmadoEn = AhoraEcuador();
+        await _registroRepo.UpdateAsync(registroId, registro).ConfigureAwait(false);
+
+        try
+        {
+            await _promoCodeService.IncrementUsesAsync(promoCode).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error incrementando usos de código promo {Code}", promoCode);
+        }
+
+        var asistente = await _asistenteRepo.GetByIdAsync(registro.AsistenteId).ConfigureAwait(false);
+        if (asistente is null) return;
+
+        var eventos = await _eventoService.GetAllAsync().ConfigureAwait(false);
+        var evento = eventos.FirstOrDefault(e => e.Id == registro.EventoId);
+        if (evento is null) return;
+
+        var qrBase64 = _qrService.GenerarQrBase64(registro.TokenQr);
+
+        await EnviarEmailSeguroAsync(async () =>
+            await _emailService.EnviarConfirmacionPagadaAsync(registro, asistente, evento, qrBase64).ConfigureAwait(false),
+            registroId, TipoEmail.ConfirmacionPagada, asistente.Email).ConfigureAwait(false);
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _telegramBot.NotificarPromoAplicadoAsync(registro, asistente, evento).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error enviando notificación Telegram para promo registro {IdCorto}", registro.IdCorto);
+            }
+        });
+
+        _logger.LogInformation("Registro {IdCorto} aprobado via promo code para {Email}", registro.IdCorto, asistente.Email);
     }
 
     public async Task RechazarAsync(string registroId, string motivo)

@@ -5,4 +5,5 @@ namespace DotNetEcuador.API.Infraestructure.Services.Eventos;
 public interface IPromoCodeService
 {
     Task<PromoCodeValidateResponseDto> ValidateAsync(string code);
+    Task IncrementUsesAsync(string code);
 }

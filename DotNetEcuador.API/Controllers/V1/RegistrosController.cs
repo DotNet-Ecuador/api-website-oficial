@@ -76,6 +76,36 @@ public class RegistrosController : BaseApiController
     }
 
     /// <summary>
+    /// Aprueba automáticamente un registro que usó código promo. Requiere X-Session-Token en el header.
+    /// </summary>
+    [HttpPost("{id}/aplicar-promo")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(401)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> AplicarPromo(
+        string id,
+        [FromBody] AplicarPromoRequestDto request,
+        [FromHeader(Name = "X-Session-Token")] string sessionToken)
+    {
+        if (string.IsNullOrEmpty(sessionToken))
+            return UnauthorizedError("Se requiere el header X-Session-Token.");
+
+        try
+        {
+            await _registroService.AplicarPromoAsync(id, sessionToken, request.Code).ConfigureAwait(false);
+            return SuccessResponse("Código promo aplicado. Tu acceso está confirmado.");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFoundError(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return UnauthorizedError(ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Recupera el registro de un asistente por email y slug del evento
     /// </summary>
     [HttpGet("recuperar")]
