@@ -4,6 +4,7 @@ using DotNetEcuador.API.Infraestructure.Repositories;
 using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Models.Auth;
 using DotNetEcuador.API.Models.Eventos;
+using DotNetEcuador.API.Models.Mentorias;
 using MongoDB.Driver;
 
 namespace DotNetEcuador.API.Configuration;
@@ -69,6 +70,8 @@ public static class MongoDbConfiguration
             services.AddMongoRepository<EmailLog>(Constants.MongoCollections.EMAIL_LOG);
             services.AddMongoRepository<DatosPago>(Constants.MongoCollections.DATOS_PAGO);
             services.AddMongoRepository<PromoCode>(Constants.MongoCollections.PROMO_CODES);
+            services.AddMongoRepository<Institucion>(Constants.MongoCollections.INSTITUCIONES);
+            services.AddMongoRepository<SolicitudMentoria>(Constants.MongoCollections.SOLICITUDES_MENTORIAS);
         }
         catch (Exception ex)
         {

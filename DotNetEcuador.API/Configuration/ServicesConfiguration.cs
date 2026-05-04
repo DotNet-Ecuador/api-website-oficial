@@ -1,5 +1,6 @@
 using DotNetEcuador.API.Infraestructure.Services;
 using DotNetEcuador.API.Infraestructure.Services.Eventos;
+using DotNetEcuador.API.Infraestructure.Services.Mentorias;
 using DotNetEcuador.API.Infraestructure.Services.Telegram;
 using DotNetEcuador.API.Services.Auth;
 using DotNetEcuador.API.Models;
@@ -49,5 +50,8 @@ public static class ServicesConfiguration
         services.AddScoped<IEmailEventoService, EmailEventoService>();
         services.AddScoped<IExportService, ExportService>();
         services.AddScoped<IPromoCodeService, PromoCodeService>();
+
+        // Register mentorias services
+        services.AddScoped<IMentoriaService, MentoriaService>();
     }
 }
