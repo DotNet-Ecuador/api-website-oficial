@@ -1,5 +1,6 @@
 using DotNetEcuador.API.Models;
 using DotNetEcuador.API.Models.Eventos;
+using DotNetEcuador.API.Models.Mentorias;
 using global::Telegram.Bot;
 using global::Telegram.Bot.Types;
 using global::Telegram.Bot.Types.Enums;
@@ -111,6 +112,27 @@ public class TelegramBotService : ITelegramBotService
                     $"*Teléfono:* {EscaparMarkdown(app.PhoneNumber)}\n" +
                     $"*Ciudad:* {EscaparMarkdown(app.City)}\n" +
                     $"*Áreas:* {EscaparMarkdown(areas)}";
+
+        await _bot.SendMessage(
+            chatId: _adminChatId,
+            text: texto,
+            parseMode: ParseMode.Markdown).ConfigureAwait(false);
+    }
+
+    public async Task NotificarNuevaSolicitudMentoriaAsync(SolicitudMentoria solicitud)
+    {
+        if (_adminChatId == 0) return;
+
+        var institucion = !string.IsNullOrEmpty(solicitud.OtraInstitucion)
+            ? EscaparMarkdown(solicitud.OtraInstitucion)
+            : EscaparMarkdown(solicitud.InstitucionNombre);
+
+        var texto = $"🎓 *Nueva solicitud de mentoría*\n\n" +
+                    $"*Nombre:* {EscaparMarkdown(solicitud.NombreCompleto)}\n" +
+                    $"*Email:* {EscaparMarkdown(solicitud.Email)}\n" +
+                    $"*Teléfono:* {EscaparMarkdown(solicitud.Telefono)}\n" +
+                    $"*Institución:* {institucion}\n\n" +
+                    $"*Tema:*\n{EscaparMarkdown(solicitud.TemaConsulta)}";
 
         await _bot.SendMessage(
             chatId: _adminChatId,
