@@ -108,6 +108,25 @@ public class AdminEventosController : BaseApiController
     }
 
     /// <summary>
+    /// Elimina lógicamente un registro (auditoría: guarda fecha de eliminación)
+    /// </summary>
+    [HttpDelete("registros/{id}")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> EliminarRegistro(string id)
+    {
+        try
+        {
+            await _registroService.EliminarAsync(id).ConfigureAwait(false);
+            return SuccessResponse("Registro eliminado.");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFoundError(ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Exporta CSV de registrados (solo con aceptaMarketing=true) para email marketing
     /// </summary>
     [HttpGet("registros/exportar")]
