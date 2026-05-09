@@ -391,6 +391,19 @@ public class RegistroService : IRegistroService
         _logger.LogInformation("Email reenviado para registro {IdCorto} ({Estado})", idCorto, registro.Estado);
     }
 
+    public async Task EliminarAsync(string registroId)
+    {
+        var registro = await _registroRepo.GetByIdAsync(registroId).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException("Registro no encontrado.");
+
+        registro.Estado = EstadoRegistro.Eliminado;
+        registro.EliminadoEn = DateTime.UtcNow;
+
+        await _registroRepo.UpdateAsync(registroId, registro).ConfigureAwait(false);
+
+        _logger.LogInformation("Registro {RegistroId} eliminado lógicamente en {EliminadoEn}", registroId, registro.EliminadoEn);
+    }
+
     private static DateTime AhoraEcuador()
         => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(Constants.TimeZones.Ecuador));
 

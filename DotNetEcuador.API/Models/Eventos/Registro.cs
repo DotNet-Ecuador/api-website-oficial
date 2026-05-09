@@ -43,6 +43,9 @@ public class Registro
 
     [BsonElement("confirmadoEn")]
     public DateTime? ConfirmadoEn { get; set; }
+
+    [BsonElement("eliminadoEn")]
+    public DateTime? EliminadoEn { get; set; }
 }
 
 public static class EstadoRegistro
@@ -51,4 +54,5 @@ public static class EstadoRegistro
     public const string Pagado = "pagado";
     public const string Rechazado = "rechazado";
     public const string Cancelado = "cancelado";
+    public const string Eliminado = "eliminado";
 }
