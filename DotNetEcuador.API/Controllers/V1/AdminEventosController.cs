@@ -33,7 +33,7 @@ public class AdminEventosController : BaseApiController
     }
 
     /// <summary>
-    /// Lista todos los eventos
+    /// Lista todos los eventos (incluye inactivos)
     /// </summary>
     [HttpGet]
     [ProducesResponseType(200)]
@@ -41,6 +41,67 @@ public class AdminEventosController : BaseApiController
     {
         var eventos = await _eventoService.GetAllAsync().ConfigureAwait(false);
         return SuccessResponse(eventos);
+    }
+
+    /// <summary>
+    /// Obtiene un evento por slug (incluye inactivos)
+    /// </summary>
+    [HttpGet("{slug}")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> GetEventoBySlug(string slug)
+    {
+        var evento = await _eventoService.GetBySlugAdminAsync(slug).ConfigureAwait(false);
+        if (evento is null)
+            return NotFoundError($"Evento '{slug}' no encontrado.");
+
+        var cupos = await _eventoService.GetCuposDisponiblesAsync(evento.Id).ConfigureAwait(false);
+        return SuccessResponse(new { evento, cuposDisponibles = cupos });
+    }
+
+    /// <summary>
+    /// Actualiza un evento existente
+    /// </summary>
+    [HttpPut("{slug}")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UpdateEvento(string slug, [FromBody] ActualizarEventoRequestDto dto)
+    {
+        try
+        {
+            await _eventoService.UpdateAsync(slug, dto).ConfigureAwait(false);
+            var updated = await _eventoService.GetBySlugAdminAsync(slug).ConfigureAwait(false);
+            return SuccessResponse(updated, "Evento actualizado exitosamente.");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFoundError(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Elimina un evento. Falla con 409 si tiene registros activos.
+    /// </summary>
+    [HttpDelete("{slug}")]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(404)]
+    [ProducesResponseType(409)]
+    public async Task<IActionResult> DeleteEvento(string slug)
+    {
+        try
+        {
+            await _eventoService.DeleteAsync(slug).ConfigureAwait(false);
+            return SuccessResponse("Evento eliminado exitosamente.");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFoundError(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BusinessError("registros-activos", ex.Message, 409);
+        }
     }
 
     /// <summary>
