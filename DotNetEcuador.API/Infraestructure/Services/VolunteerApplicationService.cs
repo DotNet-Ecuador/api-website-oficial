@@ -84,6 +84,11 @@ namespace DotNetEcuador.API.Infraestructure.Services
                 app.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
+        public async Task DeleteAsync(string id)
+        {
+            await _repository.DeleteAsync(id).ConfigureAwait(false);
+        }
+
         public async Task<VolunteerApplication?> GetByEmailAsync(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
