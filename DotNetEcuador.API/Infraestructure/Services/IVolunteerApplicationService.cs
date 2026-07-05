@@ -9,4 +9,5 @@ public interface IVolunteerApplicationService
     Task<PagedResponse<VolunteerApplication>> GetAllAsync(PagedRequest request);
     Task<PagedResponse<VolunteerApplication>> SearchAsync(PagedRequest request, string searchTerm);
     Task<VolunteerApplication?> GetByEmailAsync(string email);
+    Task DeleteAsync(string id);
 }

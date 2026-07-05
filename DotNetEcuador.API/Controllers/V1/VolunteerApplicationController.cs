@@ -177,6 +177,34 @@ public class VolunteerApplicationController : BaseApiController
     }
 
     /// <summary>
+    /// Elimina una solicitud de voluntariado por su ID
+    /// </summary>
+    /// <param name="id">ID del documento MongoDB</param>
+    /// <returns>Confirmación de eliminación</returns>
+    /// <response code="200">Solicitud eliminada exitosamente</response>
+    /// <response code="401">Usuario no autenticado</response>
+    /// <response code="404">Solicitud no encontrada</response>
+    [HttpDelete("{id}")]
+    [Authorize]
+    [ProducesResponseType(typeof(object), 200)]
+    [ProducesResponseType(typeof(object), 401)]
+    [ProducesResponseType(typeof(object), 404)]
+    public async Task<IActionResult> Delete(string id)
+    {
+        try
+        {
+            await _volunteerApplicationService.DeleteAsync(id).ConfigureAwait(false);
+            Logger.LogInformation("Volunteer application {Id} deleted by admin", id);
+            return SuccessResponse("Solicitud de voluntariado eliminada exitosamente");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error deleting volunteer application {Id}", id);
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Endpoint temporal para verificar claims del usuario autenticado
     /// </summary>
     [HttpGet("debug/claims")]
